@@ -5,11 +5,14 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Button
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { Text } from "..";
 import { useFonts } from "expo-font";
+import * as VideoThumbnails from "expo-video-thumbnails";
+import YoutubePlayer from "react-native-youtube-iframe";
 import { LinearGradient } from "expo-linear-gradient";
 import { API_BASE_URL } from "../../../constants";
 import { XMarkIcon } from "../../svg";
@@ -20,7 +23,7 @@ type ApiResponse = {
   date: string;
   explanation: string;
   hdurl: string;
-  media_type: "image";
+  media_type: "image" | "video";
   service_version: "v1";
   title: string;
   url: string;
@@ -29,24 +32,61 @@ type ApiResponse = {
 export const PictureOfTheDayCard = () => {
   const [fontsLoaded] = useFonts({
     "Satoshi-Bold": require("../../../assets/fonts/Satoshi-Bold.otf"),
-    "Satoshi-Regular": require("../../../assets/fonts/Satoshi-Regular.otf")
+    "Satoshi-Italic": require("../../../assets/fonts/Satoshi-Italic.otf"),
+    "Satoshi-Regular": require("../../../assets/fonts/Satoshi-Regular.otf"),
+    "Zodiak-Italic": require("../../../assets/fonts/Zodiak-Italic.otf")
   });
 
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [videoId, setVideoId] = useState("");
 
   const fetchData = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}`);
       const result = await response.json();
+      console.log(result);
       setData(result);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
       setLoading(false);
     }
+  }, []);
+
+  const generateThumbnail = async () => {
+    try {
+      if (!data?.url) return;
+      const { uri } = await VideoThumbnails.getThumbnailAsync(data?.url, {
+        time: 15000
+      });
+      console.log(uri);
+      setThumbnail(uri);
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  const getVideoId = (uri: string): string | null => {
+    const regex =
+      /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
+    const match = uri.match(regex);
+
+    return match ? match[1] : null;
+  };
+
+  const onStateChange = useCallback((state) => {
+    if (state === "ended") {
+      setPlaying(false);
+      Alert.alert("video has finished playing!");
+    }
+  }, []);
+  const togglePlaying = useCallback(() => {
+    setPlaying((prev) => !prev);
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
@@ -58,6 +98,9 @@ export const PictureOfTheDayCard = () => {
 
   useEffect(() => {
     fetchData(); // Initial data fetch
+    const videoId = getVideoId(data?.url);
+    setVideoId(videoId);
+    generateThumbnail();
   }, [fetchData]);
 
   const handleImageLoad = () => {
@@ -84,7 +127,7 @@ export const PictureOfTheDayCard = () => {
     >
       <Animated.Image
         source={{
-          uri: data?.url
+          uri: data?.media_type === "image" ? data.url : (thumbnail as string)
         }}
         style={styles.image}
         onLoad={handleImageLoad}
@@ -106,13 +149,29 @@ export const PictureOfTheDayCard = () => {
       >
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.modalContainer}>
-            <Image
-              source={{ uri: data?.url }}
-              placeholder={require("../../../assets/icon.png")}
-              style={styles.modalImage}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
+            {data?.media_type === "image" ? (
+              <Image
+                source={{ uri: data?.url }}
+                placeholder={require("../../../assets/icon.png")}
+                style={styles.modalImage}
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+              />
+            ) : (
+              <View>
+                <YoutubePlayer
+                  height={300}
+                  play={playing}
+                  videoId={videoId}
+                  onChangeState={onStateChange}
+                  webViewStyle={styles.modalImage}
+                />
+                <Button
+                  title={playing ? "pause" : "play"}
+                  onPress={togglePlaying}
+                />
+              </View>
+            )}
             <Text style={styles.modalText}>{data?.explanation}</Text>
             <TouchableOpacity onPress={toggleModal} style={styles.closeButton}>
               <XMarkIcon />
@@ -143,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.4)"
   },
   overlayText: {
-    fontFamily: "Satoshi-Bold",
+    fontFamily: "Satoshi-Italic",
     color: "white",
     fontSize: 20,
     fontWeight: "bold"

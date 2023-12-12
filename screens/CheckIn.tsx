@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { ReactNode, useCallback } from "react";
 import { Text, TouchableOpacity, View } from "../components/ui";
 import { BaseScreen, Navbar } from "../components/ui/reusable";
 import { useFonts } from "expo-font";
@@ -33,6 +33,14 @@ const styles = StyleSheet.create({
   }
 });
 
+const CheckInButtonsContainer = ({ children }: { children: ReactNode }) => {
+  return (
+    <View style={styles.container}>
+      {children}
+    </View>
+  )
+}
+
 export default function CheckIn({ navigation }: { navigation: any }) {
   const [fontsLoaded] = useFonts({
     "Satoshi-Regular": require("../assets/fonts/Satoshi-Regular.otf"),
@@ -42,29 +50,6 @@ export default function CheckIn({ navigation }: { navigation: any }) {
   const navigateToEmotionCircles = useCallback(() => {
     navigation.navigate("EmotionCircles");
   }, [navigation]);
-
-  const checkInButtons = [
-    <HighEnergyUnpleasantButton
-      style={styles.item}
-      key={1}
-      onPress={navigateToEmotionCircles}
-    />,
-    <HighEnergyPleasantButton
-      style={styles.item}
-      key={2}
-      onPress={navigateToEmotionCircles}
-    />,
-    <LowEnergyUnpleasantButton
-      style={styles.item}
-      key={3}
-      onPress={navigateToEmotionCircles}
-    />,
-    <LowEnergyPleasantButton
-      style={styles.item}
-      key={4}
-      onPress={navigateToEmotionCircles}
-    />
-  ];
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -93,9 +78,12 @@ export default function CheckIn({ navigation }: { navigation: any }) {
         >
           Check In with Your Cosmic Emotions
         </Text>
-        <View style={styles.container}>
-          {checkInButtons.map((component) => component)}
-        </View>
+        <CheckInButtonsContainer>
+          <HighEnergyUnpleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
+          <HighEnergyPleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
+          <LowEnergyUnpleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
+          <LowEnergyPleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
+        </CheckInButtonsContainer>
       </View>
     </BaseScreen>
   );

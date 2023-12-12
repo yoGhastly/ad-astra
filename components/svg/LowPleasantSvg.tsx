@@ -36,8 +36,8 @@ export const LowPleasantSvg = ({ style }: { style: StyleProp<ViewStyle> }) => {
           y2="147.5"
           gradientUnits="userSpaceOnUse"
         >
-          <Stop offset="0.0509862" stopColor="#3ecc8c" />
-          <Stop offset="1" stopColor="#3ecc8c" />
+          <Stop offset="0.0509862" stopColor="#70C93A" />
+          <Stop offset="1" stopColor="#B7FFB6" />
         </LinearGradient>
         <ClipPath id="clip0_133_21">
           <Rect width="200" height="200" fill="white" />

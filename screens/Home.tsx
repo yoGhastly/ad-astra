@@ -6,36 +6,26 @@ import { View, Text } from "../components/ui";
 import {
   BaseScreen,
   BottomNavigation,
+  CheckInButton,
   Chip,
   Navbar,
-  PictureOfTheDayCard
+  PictureOfTheDayCard,
+  withHapticFeedback
 } from "../components/ui/reusable";
-import CircularGradient from "../components/svg/CircularGradient";
-import { Pressable } from "react-native";
-import { PlusIcon } from "../components/svg/PlusIcon";
 import { ScrollView } from "moti";
 import clsx from "clsx";
-import Animated, {
-  SharedTransition,
-  withSpring
-} from "react-native-reanimated";
 import { ConfigIcon } from "../components/svg/ConfigIcon";
 import { ShareIcon } from "../components/svg/ShareIcon";
+import { StyleSheet } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
-const customTransition = SharedTransition.custom((values) => {
-  "worklet";
-  return {
-    height: withSpring(values.targetHeight),
-    width: withSpring(values.targetWidth),
-    originX: withSpring(values.targetOriginX),
-    originY: withSpring(values.targetOriginY)
-  };
-});
+
+const CheckInWithHaptic = withHapticFeedback(CheckInButton);
+
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const [fontsLoaded] = useFonts({
     "Satoshi-Regular": require("../assets/fonts/Satoshi-Regular.otf"),
-    "Boska-Bold": require("../assets/fonts/Boska-Bold.otf")
+    "Zodiak-Bold": require("../assets/fonts/Zodiak-Bold.otf")
   });
 
   const onLayoutRootView = useCallback(async () => {
@@ -52,7 +42,14 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     <BaseScreen onLayoutRootView={onLayoutRootView}>
       <Navbar startContent={<ConfigIcon />} endContent={<ShareIcon />} />
       <ScrollView style={{ flex: 1 }}>
-        <View className="flex flex-col gap-5 justify-center items-center mt-4">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 4
+          }}
+        >
           <Text
             style={{ fontFamily: "Satoshi-Regular" }}
             className="text-light-gray text-[16px] w-full text-center"
@@ -60,34 +57,19 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             Share your thoughts inspired by the universe
           </Text>
           <Text
-            style={{ fontFamily: "Boska-Bold" }}
+            style={{ fontFamily: "Zodiak-Bold" }}
             className="text-3xl text-mist_gray text-center max-w-xs"
           >
             How are you feeling today?
           </Text>
+          <CheckInWithHaptic
+            onPress={() => navigation.navigate("NextScreen")}
+          />
         </View>
-        <Pressable
-          style={{
-            alignSelf: "center",
-            marginTop: 20,
-            position: "relative",
-            alignItems: "center"
-          }}
-          onPress={() => navigation.navigate("NextScreen")}
-        >
-          <CircularGradient />
-          <PlusIcon />
-          <Text
-            style={{ fontFamily: "Satoshi-Regular" }}
-            className="text-light-gray mt-4 text-[16px]"
-          >
-            Check in
-          </Text>
-        </Pressable>
         <View className="flex flex-row justify-between items-center mt-16 mx-auto">
           <Chip>
             <Text
-              style={{ fontFamily: "Boska-Bold" }}
+              style={{ fontFamily: "Zodiak-Bold" }}
               className="text-mist_gray text-5xl"
             >
               {10}
@@ -103,7 +85,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
           <Chip>
             <Text
-              style={{ fontFamily: "Boska-Bold" }}
+              style={{ fontFamily: "Zodiak-Bold" }}
               className="text-mist_gray text-5xl"
             >
               {10}

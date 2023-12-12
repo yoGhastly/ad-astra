@@ -4,3 +4,4 @@ export { BaseScreen } from "./BaseScreen";
 export { Chip } from "./Chip";
 export { PictureOfTheDayCard } from "./Card";
 export { withHapticFeedback } from "./HapticButton";
+export { CheckInButton } from "./CheckInButton";
