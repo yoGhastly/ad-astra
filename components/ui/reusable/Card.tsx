@@ -15,8 +15,10 @@ import * as VideoThumbnails from "expo-video-thumbnails";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { LinearGradient } from "expo-linear-gradient";
 import { API_BASE_URL } from "../../../constants";
-import { XMarkIcon } from "../../svg";
 import Animated from "react-native-reanimated";
+import Loader from "./Loader";
+import { Skeleton } from "moti/skeleton";
+import { XMarkIcon } from "../../svg/icons";
 
 type ApiResponse = {
   copyright: string;
@@ -44,12 +46,16 @@ export const PictureOfTheDayCard = () => {
   const [playing, setPlaying] = useState(false);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [videoId, setVideoId] = useState("");
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [gradient, setGradient] = useState({
+    imageType: ["transparent", "rgba(0, 0, 0, 0.4)"],
+    videoType: ["transparent", "#5B3BCC"]
+  });
 
   const fetchData = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}`);
       const result = await response.json();
-      console.log(result);
       setData(result);
       setLoading(false);
     } catch (error) {
@@ -79,12 +85,12 @@ export const PictureOfTheDayCard = () => {
     return match ? match[1] : null;
   };
 
-  const onStateChange = useCallback((state) => {
+  const onStateChange = useCallback((state: string) => {
     if (state === "ended") {
       setPlaying(false);
-      Alert.alert("video has finished playing!");
     }
   }, []);
+
   const togglePlaying = useCallback(() => {
     setPlaying((prev) => !prev);
   }, []);
@@ -98,10 +104,14 @@ export const PictureOfTheDayCard = () => {
 
   useEffect(() => {
     fetchData(); // Initial data fetch
-    const videoId = getVideoId(data?.url);
-    setVideoId(videoId);
     generateThumbnail();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!data) return;
+    const videoId = getVideoId(data?.url as string);
+    setVideoId(videoId as string);
+  }, [data]);
 
   const handleImageLoad = () => {
     setImageLoading(false);
@@ -127,7 +137,7 @@ export const PictureOfTheDayCard = () => {
     >
       <Animated.Image
         source={{
-          uri: data?.media_type === "image" ? data.url : (thumbnail as string)
+          uri: data?.url
         }}
         style={styles.image}
         onLoad={handleImageLoad}
@@ -135,10 +145,14 @@ export const PictureOfTheDayCard = () => {
       />
       {imageLoading && <Text style={styles.loadingText}>Loading Image...</Text>}
       <LinearGradient
-        colors={["transparent", "rgba(0, 0, 0, 0.4)"]}
+        colors={
+          data?.media_type === "image" ? gradient.imageType : gradient.videoType
+        }
         style={styles.overlay}
       >
-        <Text style={styles.overlayText}>Picture of the day</Text>
+        <Text style={styles.overlayText}>
+          {data?.media_type === "image" ? "Picture of the day" : data?.title}
+        </Text>
       </LinearGradient>
 
       <Modal
@@ -158,19 +172,16 @@ export const PictureOfTheDayCard = () => {
                 onError={handleImageError}
               />
             ) : (
-              <View>
+              data?.media_type === "video" && (
                 <YoutubePlayer
                   height={300}
                   play={playing}
                   videoId={videoId}
                   onChangeState={onStateChange}
+                  onReady={() => setIsVideoReady(true)}
                   webViewStyle={styles.modalImage}
                 />
-                <Button
-                  title={playing ? "pause" : "play"}
-                  onPress={togglePlaying}
-                />
-              </View>
+              )
             )}
             <Text style={styles.modalText}>{data?.explanation}</Text>
             <TouchableOpacity onPress={toggleModal} style={styles.closeButton}>

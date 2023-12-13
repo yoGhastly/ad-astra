@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     left: "24%",
-    top: "43%"
+    top: "40%"
   }
 });
 

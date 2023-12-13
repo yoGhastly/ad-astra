@@ -12,8 +12,11 @@ const HighEnergyUnpleasant = () => {
   return (
     <View className="flex flex-col gap-5 justify-center items-center">
       <HighUnpleasantSvg style={styles.item} />
-      <Text className="text-mist_gray text-center capitalize">
-        High energy Unplesant
+      <Text
+        className="text-mist_gray text-center capitalize"
+        style={{ marginTop: 10 }}
+      >
+        High energy Unpleasant
       </Text>
     </View>
   );
@@ -23,8 +26,11 @@ const HighEnergyPleasant = () => {
   return (
     <View className="flex flex-col gap-5 justify-center items-center">
       <HighPleasantSvg style={styles.item} />
-      <Text className="text-mist_gray text-center capitalize">
-        High energy plesant
+      <Text
+        className="text-mist_gray text-center capitalize"
+        style={{ marginTop: 10 }}
+      >
+        High energy pleasant
       </Text>
     </View>
   );
@@ -34,8 +40,11 @@ const LowEnergyUnpleasant = () => {
   return (
     <View className="flex flex-col gap-5 justify-center items-center">
       <LowUnpleasantSvg style={styles.item} />
-      <Text className="text-mist_gray text-center capitalize">
-        Low energy unplesant
+      <Text
+        className="text-mist_gray text-center capitalize"
+        style={{ marginTop: 10 }}
+      >
+        Low energy unpleasant
       </Text>
     </View>
   );
@@ -45,8 +54,11 @@ const LowEnergyPleasant = () => {
   return (
     <View className="flex flex-col gap-5 justify-center items-center">
       <LowPleasantSvg style={styles.item} />
-      <Text className="text-mist_gray text-center capitalize">
-        Low energy plesant
+      <Text
+        className="text-mist_gray text-center capitalize"
+        style={{ marginTop: 10 }}
+      >
+        Low energy pleasant
       </Text>
     </View>
   );

@@ -1,22 +1,27 @@
 import React, { ReactNode } from "react";
-import { View } from "..";
+import { Animated } from "react-native";
 
 export const BaseScreen: React.FC<{
   children: ReactNode;
   onLayoutRootView?: () => Promise<void>;
-}> = ({ children, onLayoutRootView }) => {
+  style?: any;
+}> = ({ children, style, onLayoutRootView, ...props }) => {
+  const defaultStyles = {
+    height: "100%",
+    backgroundColor: "#000",
+    display: "flex",
+    paddingVertical: 15,
+    paddingHorizontal: 10
+  };
   return (
-    <View
+    <Animated.View
       style={{
-        height: "100%",
-        backgroundColor: "#000",
-        display: "flex",
-        paddingVertical: 15,
-        paddinCheckIngHorizontal: 10
+        ...defaultStyles,
+        ...style // Merge user-provided styles
       }}
       onLayout={onLayoutRootView}
     >
       {children}
-    </View>
+    </Animated.View>
   );
 };

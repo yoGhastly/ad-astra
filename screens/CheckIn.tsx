@@ -1,16 +1,21 @@
-import React, { ReactNode, useCallback } from "react";
+import React, { ReactNode, useCallback, useEffect, useRef } from "react";
 import { Text, TouchableOpacity, View } from "../components/ui";
-import { BaseScreen, Navbar } from "../components/ui/reusable";
+import {
+  BaseScreen,
+  Navbar,
+  withHapticFeedback
+} from "../components/ui/reusable";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { StyleSheet } from "react-native";
-import { SearchIcon, XMarkIcon } from "../components/svg";
+import { StyleSheet, Animated } from "react-native";
+import { Easing } from "react-native-reanimated";
 import {
   HighEnergyPleasantButton,
   HighEnergyUnpleasantButton,
   LowEnergyPleasantButton,
   LowEnergyUnpleasantButton
 } from "../components/ui/reusable/CheckInButtons";
+import { SearchIcon, XMarkIcon } from "../components/svg/icons";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -20,7 +25,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 20
+    gap: 25
   },
   item: {
     flex: 1
@@ -34,12 +39,10 @@ const styles = StyleSheet.create({
 });
 
 const CheckInButtonsContainer = ({ children }: { children: ReactNode }) => {
-  return (
-    <View style={styles.container}>
-      {children}
-    </View>
-  )
-}
+  return <View style={styles.container}>{children}</View>;
+};
+
+const SearchIconWithHaptic = withHapticFeedback(SearchIcon);
 
 export default function CheckIn({ navigation }: { navigation: any }) {
   const [fontsLoaded] = useFonts({
@@ -48,8 +51,19 @@ export default function CheckIn({ navigation }: { navigation: any }) {
   });
 
   const navigateToEmotionCircles = useCallback(() => {
-    navigation.navigate("EmotionCircles");
+    navigation.navigate("SearchEmotions");
   }, [navigation]);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000, // Adjust the duration as needed
+      useNativeDriver: true,
+      easing: Easing.out(Easing.circle)
+    }).start();
+  }, [fadeAnim]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -62,14 +76,21 @@ export default function CheckIn({ navigation }: { navigation: any }) {
   }
 
   return (
-    <BaseScreen onLayoutRootView={onLayoutRootView}>
+    <BaseScreen
+      onLayoutRootView={onLayoutRootView}
+      style={{ opacity: fadeAnim, backgroundColor: "#000" }}
+    >
       <Navbar
         startContent={
           <TouchableOpacity onPress={() => navigation.replace("Home")}>
             <XMarkIcon />
           </TouchableOpacity>
         }
-        endContent={<SearchIcon />}
+        endContent={
+          <SearchIconWithHaptic
+            onPress={() => navigation.push("SearchEmotions")}
+          />
+        }
       />
       <View className="mx-auto my-4" style={styles.flex}>
         <Text
@@ -79,10 +100,22 @@ export default function CheckIn({ navigation }: { navigation: any }) {
           Check In with Your Cosmic Emotions
         </Text>
         <CheckInButtonsContainer>
-          <HighEnergyUnpleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
-          <HighEnergyPleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
-          <LowEnergyUnpleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
-          <LowEnergyPleasantButton onPress={navigateToEmotionCircles} style={styles.item} />
+          <HighEnergyUnpleasantButton
+            onPress={navigateToEmotionCircles}
+            style={styles.item}
+          />
+          <HighEnergyPleasantButton
+            onPress={navigateToEmotionCircles}
+            style={styles.item}
+          />
+          <LowEnergyUnpleasantButton
+            onPress={navigateToEmotionCircles}
+            style={styles.item}
+          />
+          <LowEnergyPleasantButton
+            onPress={navigateToEmotionCircles}
+            style={styles.item}
+          />
         </CheckInButtonsContainer>
       </View>
     </BaseScreen>

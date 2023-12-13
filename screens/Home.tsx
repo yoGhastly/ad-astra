@@ -7,20 +7,19 @@ import {
   BaseScreen,
   BottomNavigation,
   CheckInButton,
-  Chip,
   Navbar,
   PictureOfTheDayCard,
   withHapticFeedback
 } from "../components/ui/reusable";
 import { ScrollView } from "moti";
 import clsx from "clsx";
-import { ConfigIcon } from "../components/svg/ConfigIcon";
-import { ShareIcon } from "../components/svg/ShareIcon";
-import { StyleSheet } from "react-native";
+import { ConfigIcon, ShareIcon } from "../components/svg/icons";
+import { onShare } from "../helpers/shareApp";
 
 SplashScreen.preventAutoHideAsync();
 
 const CheckInWithHaptic = withHapticFeedback(CheckInButton);
+const ShareIconWithHaptic = withHapticFeedback(ShareIcon);
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const [fontsLoaded] = useFonts({
@@ -40,14 +39,17 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
   return (
     <BaseScreen onLayoutRootView={onLayoutRootView}>
-      <Navbar startContent={<ConfigIcon />} endContent={<ShareIcon />} />
+      <Navbar
+        startContent={<ConfigIcon />}
+        endContent={<ShareIconWithHaptic onPress={onShare} />}
+      />
       <ScrollView style={{ flex: 1 }}>
         <View
           style={{
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            gap: 4
+            gap: 15
           }}
         >
           <Text
@@ -62,12 +64,10 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           >
             How are you feeling today?
           </Text>
-          <CheckInWithHaptic
-            onPress={() => navigation.navigate("NextScreen")}
-          />
+          <CheckInWithHaptic onPress={() => navigation.navigate("CheckIn")} />
         </View>
         <View className="flex flex-row justify-between items-center mt-16 mx-auto">
-          <Chip>
+          <View className="flex flex-row gap-4">
             <Text
               style={{ fontFamily: "Zodiak-Bold" }}
               className="text-mist_gray text-5xl"
@@ -77,13 +77,13 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
             <Text
               style={{ fontFamily: "Satoshi-Regular" }}
-              className="text-mist_gray text-[15px] w-[50px]"
+              className="text-mist_gray text-[15px] w-[60px]"
             >
               unique feelings
             </Text>
-          </Chip>
+          </View>
 
-          <Chip>
+          <View className="flex flex-row gap-4 ml-4">
             <Text
               style={{ fontFamily: "Zodiak-Bold" }}
               className="text-mist_gray text-5xl"
@@ -97,7 +97,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             >
               day streak
             </Text>
-          </Chip>
+          </View>
         </View>
         <Text
           className="text-mist_gray self-center  text-[16px] mx-8 mt-8"

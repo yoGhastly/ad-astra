@@ -1,6 +1,6 @@
 import { View, Text } from "..";
 import CircularGradient from "../../svg/CircularGradient";
-import { PlusIcon } from "../../svg/PlusIcon";
+import { PlusIcon } from "../../svg/icons";
 
 export const CheckInButton = () => {
   return (
@@ -16,7 +16,7 @@ export const CheckInButton = () => {
       <PlusIcon />
       <Text
         style={{ fontFamily: "Satoshi-Regular" }}
-        className="text-light-gray mt-4 text-[16px]"
+        className="text-light-gray mt-8 text-[16px]"
       >
         Check in
       </Text>

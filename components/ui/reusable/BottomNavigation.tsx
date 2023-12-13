@@ -1,9 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "..";
-import { FontAwesome } from "@expo/vector-icons"; // Import icons from Expo vector icons library
-import { PlusIconColored } from "../../svg/PlusIcon";
 import { SparklesColored } from "../../svg/SparklesColored";
 import { PuzzledPieceColored } from "../../svg/PuzzlePieceColored";
+import { PlusIconColored } from "../../svg/icons/PlusIcon";
 
 export const BottomNavigation = () => {
   return (

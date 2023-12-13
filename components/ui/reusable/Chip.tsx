@@ -1,23 +1,47 @@
-import { ReactNode } from "react";
+import React from "react";
 import { StyleSheet } from "react-native";
 import { Pressable, Text } from "..";
 
-export const Chip: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <Pressable style={styles.container}>{children}</Pressable>;
+interface Props {
+  color: "red" | "yellow" | "blue" | "green" | "default";
+  label: string;
+}
+
+const colorMappings = {
+  yellow: { borderColor: "#FFD9A0", textColor: "#E8A33A" },
+  red: { borderColor: "#DE4C66", textColor: "#DC163A" },
+  blue: { borderColor: "#A7B5FF", textColor: "#4560F2" },
+  green: { borderColor: "#B7FFB6", textColor: "#70C93A" },
+  default: { borderColor: "gray", textColor: "#e0e0e0" }
+};
+
+export const Chip: React.FC<Props> = ({ label, color = "default" }) => {
+  const { borderColor, textColor } = colorMappings[color];
+
+  return (
+    <Pressable style={[styles.container, { borderColor, borderWidth: 1.5 }]}>
+      <Text
+        style={{
+          color: textColor,
+          fontFamily: "Satoshi-Regular",
+          fontSize: 16
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: 100,
+    width: 75,
     height: 50,
     gap: 15,
     display: "flex",
     flexDirection: "row",
-    paddingHorizontal: 3,
-    paddingVertical: 1.5,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 100,
-    marginHorizontal: 25
+    borderRadius: 100
   }
 });

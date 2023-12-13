@@ -1,9 +1,6 @@
 import React from "react";
 import { TouchableOpacity } from "react-native";
 import { View, Text } from "..";
-import clsx from "clsx";
-import { ConfigIcon } from "../../svg/ConfigIcon";
-import { ShareIcon } from "../../svg/ShareIcon";
 
 interface NavbarProps {
   startContent?: React.ReactNode;
@@ -20,8 +17,8 @@ export const Navbar: React.FC<NavbarProps> = ({ startContent, endContent }) => {
         alignItems: "center"
       }}
     >
-      <TouchableOpacity>{startContent}</TouchableOpacity>
-      <TouchableOpacity>{endContent}</TouchableOpacity>
+      {startContent && <TouchableOpacity>{startContent}</TouchableOpacity>}
+      {endContent && <TouchableOpacity>{endContent}</TouchableOpacity>}
     </View>
   );
 };

@@ -39,7 +39,7 @@ export const LowUnpleasantSvg = ({
           gradientUnits="userSpaceOnUse"
         >
           <Stop stopColor="#A7B5FF" />
-          <Stop offset="1" stopColor="#A0d0FF" />
+          <Stop offset="1" stopColor="#F3ACFF" />
         </LinearGradient>
         <ClipPath id="clip0_221_10">
           <Rect width="200" height="200" fill="white" />

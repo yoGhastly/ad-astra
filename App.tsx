@@ -14,8 +14,8 @@ export default function App() {
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="NextScreen" component={CheckIn} />
-        <Stack.Screen name="EmotionCircles" component={EmotionCircles} />
+        <Stack.Screen name="CheckIn" component={CheckIn} />
+        <Stack.Screen name="SearchEmotions" component={EmotionCircles} />
       </Stack.Navigator>
     </NavigationContainer>
   );
