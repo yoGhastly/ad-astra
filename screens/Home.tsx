@@ -106,7 +106,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           Each day a different image or photograph of our fascinating{" "}
           <Text className={clsx("text-secondary/80")}>universe.</Text>
         </Text>
-        <PictureOfTheDayCard />
+        <PictureOfTheDayCard
+          onPressCallToAction={() => navigation.navigate("Home")}
+        />
       </ScrollView>
       <BottomNavigation />
     </BaseScreen>

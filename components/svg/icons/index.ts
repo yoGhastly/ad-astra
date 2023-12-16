@@ -4,3 +4,4 @@ export { PlusIcon } from "./PlusIcon";
 export { SearchIcon } from "./SearchIcon";
 export { ShareIcon } from "./ShareIcon";
 export { XMarkIcon } from "./XMarkIcon";
+export { ArrowsPointingOut } from "./ArrowsPointingOut";

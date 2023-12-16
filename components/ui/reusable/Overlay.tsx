@@ -1,47 +1,32 @@
-import React, { FC, useEffect } from "react";
-import {
-  View,
-  Modal,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StyleProp,
-  ViewStyle
-} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { ReactNode } from "react";
+import { StyleSheet } from "react-native";
+import { View } from "..";
 
-interface OverlayProps {
-  isVisible: boolean;
-  onClose: () => void;
-  style?: StyleProp<ViewStyle>;
-}
-
-const OverlayComponent: FC<OverlayProps> = ({ isVisible, onClose, style }) => {
+export const Overlay: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isVisible}
-      onRequestClose={onClose}
-    >
-      <View style={[styles.overlay, style]}></View>
-    </Modal>
+    <View style={styles.container}>
+      {children}
+      <LinearGradient
+        colors={["transparent", "transparent", "rgba(0,0,0,0.7)"]}
+        style={styles.overlay}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
-    height: "100%",
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 1)"
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
+    padding: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.4)"
   },
-  closeButton: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: "lightgray",
-    borderRadius: 5
+
+  container: {
+    position: "relative",
+    width: "100%",
+    height: "60%",
+    backgroundColor: "rgba(0,0,0,0.9)"
   }
 });
-
-export default OverlayComponent;

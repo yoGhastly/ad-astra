@@ -54,14 +54,14 @@ export default function CheckIn({ navigation }: { navigation: any }) {
     navigation.navigate("SearchEmotions");
   }, [navigation]);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000, // Adjust the duration as needed
       useNativeDriver: true,
-      easing: Easing.out(Easing.circle)
+      easing: Easing.circle
     }).start();
   }, [fadeAnim]);
 
