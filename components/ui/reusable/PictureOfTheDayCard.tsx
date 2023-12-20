@@ -252,7 +252,7 @@ export const ModalContent: React.FC<ModalContentProps> = ({
       )}
       <BottomSheet
         ref={bottomSheetRef}
-        handleIndicatorStyle={{ backgroundColor: "#9d9d9d" }}
+        handleIndicatorStyle={{ backgroundColor: "#fefefe" }}
         backgroundStyle={{ backgroundColor: "#000" }}
         index={0}
         snapPoints={snapPoints}
