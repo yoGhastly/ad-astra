@@ -8,7 +8,12 @@ export const Overlay: React.FC<{ children: ReactNode }> = ({ children }) => {
     <View style={styles.container}>
       {children}
       <LinearGradient
-        colors={["transparent", "transparent", "rgba(0,0,0,0.7)"]}
+        colors={[
+          "transparent",
+          "transparent",
+          "rgba(0, 0, 0, 0.2)",
+          "rgba(0,0,0,0.7)"
+        ]}
         style={styles.overlay}
       />
     </View>

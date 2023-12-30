@@ -25,6 +25,7 @@ import { withHapticFeedback } from "./HapticButton";
 import { ArrowsPointingOut, XMarkIcon } from "../../svg/icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Modal } from "./Modal";
+import { SafeAreaView } from "moti";
 
 interface ModalLayoutProps {
   isVisible: boolean;
@@ -72,7 +73,7 @@ function CallToActionButton() {
   return (
     <View style={styles.styledButton}>
       <Text style={{ fontFamily: "Satoshi-Bold" }}>
-        What does this makes you feel?
+        Share your thoughts on this
       </Text>
     </View>
   );
@@ -261,28 +262,32 @@ export const ModalContent: React.FC<ModalContentProps> = ({
       >
         <BottomSheetView
           style={{
-            marginTop: 20,
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "center",
             gap: 20,
             alignItems: "center",
-            flexDirection: "column"
+            flexDirection: "column",
+            paddingVertical: 10
           }}
         >
-          <View>
+          <SafeAreaView>
             <Text style={styles.modalTitle}>{title}</Text>
-            <Text style={styles.modalText}>{body}</Text>
-          </View>
+            <Text style={styles.modalText}>{body?.replace(/\. /g, ".\n")}</Text>
+          </SafeAreaView>
           <CallToActionWithHaptic onPress={onPressCallToAction} />
         </BottomSheetView>
       </BottomSheet>
 
-      <View style={styles.navbar}>
+      <SafeAreaView style={styles.navbar}>
         {[
           <XMarkIconWithHaptic key={0} onPress={onCloseModal} />,
           <ArrowsPointingOutWithHaptic key={1} onPress={openModal} />
-        ].map((icon) => icon)}
-      </View>
+        ].map((icon, idx) => (
+          <View key={idx} style={{ marginHorizontal: 15 }}>
+            {icon}
+          </View>
+        ))}
+      </SafeAreaView>
       <Modal visible={modalVisible} onClose={closeModal}>
         <Image
           source={{ uri: imgSrc }}
@@ -342,13 +347,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.9)",
     height: 666,
-    zIndex: 100
+    zIndex: 100,
+    position: "relative"
   },
 
   modalImage: {
     width: "100%",
     height: "100%",
-    objectFit: "cover",
+    objectFit: "fill",
     position: "absolute",
     top: 0
   },
@@ -368,6 +374,7 @@ const styles = StyleSheet.create({
 
   modalText: {
     fontSize: 14,
+    lineHeight: 24,
     color: "white",
     padding: 20,
     fontFamily: "Satoshi-Regular"
@@ -375,12 +382,12 @@ const styles = StyleSheet.create({
 
   navbar: {
     position: "absolute",
-    flex: 1,
+    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
+    marginHorizontal: 15,
     width: "100%",
-    top: 20,
-    padding: 15
+    zIndex: 1
   },
 
   styledButton: {

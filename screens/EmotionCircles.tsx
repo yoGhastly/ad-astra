@@ -70,7 +70,7 @@ const EmotionCircles = ({
           className="flex flex-col mx-auto w-full h-full"
           style={{ gap: 20 }}
         >
-          <Search onCancel={() => navigation.push("EmotionCircles")} />
+          <Search onCancel={() => navigation.push("CheckIn")} />
           <View className="flex flex-row" style={{ gap: 5 }}>
             {emotionsColorList.map(({ label, color }, index) => (
               <Chip label={label} color={color} key={index} />

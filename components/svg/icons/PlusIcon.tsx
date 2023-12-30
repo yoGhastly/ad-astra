@@ -51,7 +51,7 @@ function PlusIconColored() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    left: "24%",
+    left: "22%",
     top: "40%"
   }
 });

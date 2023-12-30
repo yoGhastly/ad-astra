@@ -8,6 +8,7 @@ import {
 import { BlurView } from "expo-blur";
 import { withHapticFeedback } from "./HapticButton";
 import { XMarkIcon } from "../../svg/icons";
+import { SafeAreaView } from "moti";
 
 interface ModalProps {
   visible: boolean;
@@ -24,7 +25,7 @@ export const Modal: React.FC<ModalProps> = ({ visible, onClose, children }) => {
       visible={visible}
       onRequestClose={onClose}
     >
-      <BlurView style={styles.modalContainer}>
+      <BlurView style={styles.modalContainer} onTouchStart={onClose}>
         <View style={styles.modalContent}>{children}</View>
         <TouchableOpacity style={styles.closeButton}>
           <XMarkWithHaptic onPress={onClose} />
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
     padding: 20
   },
   closeButton: {
-    padding: 10,
+    padding: 20,
     borderRadius: 5,
     position: "absolute",
     top: 20,

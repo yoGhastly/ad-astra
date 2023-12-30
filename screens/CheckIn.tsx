@@ -7,8 +7,7 @@ import {
 } from "../components/ui/reusable";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { StyleSheet, Animated } from "react-native";
-import { Easing } from "react-native-reanimated";
+import { StyleSheet } from "react-native";
 import {
   HighEnergyPleasantButton,
   HighEnergyUnpleasantButton,
@@ -54,17 +53,6 @@ export default function CheckIn({ navigation }: { navigation: any }) {
     navigation.navigate("SearchEmotions");
   }, [navigation]);
 
-  const fadeAnim = useRef(new Animated.Value(0.6)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000, // Adjust the duration as needed
-      useNativeDriver: true,
-      easing: Easing.circle
-    }).start();
-  }, [fadeAnim]);
-
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
       await SplashScreen.hideAsync();
@@ -76,10 +64,7 @@ export default function CheckIn({ navigation }: { navigation: any }) {
   }
 
   return (
-    <BaseScreen
-      onLayoutRootView={onLayoutRootView}
-      style={{ opacity: fadeAnim, backgroundColor: "#000" }}
-    >
+    <BaseScreen onLayoutRootView={onLayoutRootView}>
       <Navbar
         startContent={
           <TouchableOpacity onPress={() => navigation.replace("Home")}>
@@ -92,7 +77,7 @@ export default function CheckIn({ navigation }: { navigation: any }) {
           />
         }
       />
-      <View className="mx-auto my-4" style={styles.flex}>
+      <View className="mx-4 my-4" style={styles.flex}>
         <Text
           style={{ fontFamily: "Satoshi-Bold" }}
           className="text-mist_gray text-3xl text-center"

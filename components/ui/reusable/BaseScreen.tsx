@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Animated } from "react-native";
+import { SafeAreaView } from "react-native";
 
 export const BaseScreen: React.FC<{
   children: ReactNode;
@@ -10,11 +10,11 @@ export const BaseScreen: React.FC<{
     height: "100%",
     backgroundColor: "#000",
     display: "flex",
-    paddingVertical: 15,
-    paddingHorizontal: 10
+    paddingVertical: "auto",
+    paddingHorizontal: "auto"
   };
   return (
-    <Animated.View
+    <SafeAreaView
       style={{
         ...defaultStyles,
         ...style // Merge user-provided styles
@@ -22,6 +22,6 @@ export const BaseScreen: React.FC<{
       onLayout={onLayoutRootView}
     >
       {children}
-    </Animated.View>
+    </SafeAreaView>
   );
 };
