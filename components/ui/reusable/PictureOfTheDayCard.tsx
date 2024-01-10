@@ -7,6 +7,7 @@ import React, {
   useState
 } from "react";
 import {
+  Pressable,
   Modal as RNModal,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import {
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import * as Haptics from "expo-haptics";
+import { Gyroscope } from 'expo-sensors';
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useFonts } from "expo-font";
 import { Image } from "expo-image";
@@ -26,6 +28,9 @@ import { ArrowsPointingOut, XMarkIcon } from "../../svg/icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Modal } from "./Modal";
 import { SafeAreaView } from "moti";
+import { BlurView } from "expo-blur";
+import Animated, { runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import { PanGestureHandler, PanGestureHandlerGestureEvent } from "react-native-gesture-handler";
 
 interface ModalLayoutProps {
   isVisible: boolean;
@@ -65,7 +70,7 @@ type ApiResponse = {
 };
 
 const gradientList = {
-  imageType: ["transparent", "rgba(0, 0, 0, 0.5)"],
+  imageType: ["transparent", "transparent", "rgba(0, 0, 0, 0.9)"],
   videoType: ["transparent", "blue"]
 };
 
@@ -99,6 +104,39 @@ export const PictureOfTheDayCard: React.FC<{
   const [imageLoading, setImageLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
   const [videoId, setVideoId] = useState("");
+  const [gyroscopeData, setGyroscopeData] = useState({ x: 0, y: 0, z: 0 });
+  const rotation = useSharedValue(0);
+
+  const movingAverage = (currentValue, previousValue, factor = 0.9) => {
+    return previousValue + factor * (currentValue - previousValue);
+  };
+
+  const _subscribeToGyroscope = () => {
+    Gyroscope.setUpdateInterval(16);
+    Gyroscope.addListener(gyroscopeData => {
+      setGyroscopeData(prevData => ({
+        x: movingAverage(gyroscopeData.x, prevData.x),
+        y: movingAverage(gyroscopeData.y, prevData.y),
+        z: movingAverage(gyroscopeData.z, prevData.z),
+      }));
+    });
+  };
+
+  const _unsubscribeFromGyroscope = () => {
+    Gyroscope.removeAllListeners();
+  };
+
+  const onGestureEvent = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      ctx.startX = rotation.value;
+    },
+    onActive: (event, ctx) => {
+      // Use runOnJS to execute UI-related code inside the UI thread
+      runOnJS((value: number) => {
+        rotation.value = ctx.startX + event.translationX / 10; // Adjust the sensitivity
+      })(rotation.value);
+    },
+  });
 
   const fetchData = useCallback(async () => {
     try {
@@ -137,6 +175,13 @@ export const PictureOfTheDayCard: React.FC<{
     setVideoId(videoId as string);
   }, [data]);
 
+  useEffect(() => {
+    _subscribeToGyroscope();
+    return () => {
+      _unsubscribeFromGyroscope();
+    };
+  }, []);
+
   const handleImageLoad = () => {
     setImageLoading(false);
   };
@@ -149,38 +194,51 @@ export const PictureOfTheDayCard: React.FC<{
     setModalVisible(!isModalVisible);
   };
 
+  const animatedCardStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: gyroscopeData.x * 2 }, // Adjust the sensitivity
+        { translateY: gyroscopeData.y * 2 },
+        { rotateZ: `${rotation.value}deg` },
+      ],
+    };
+  });
+
   if (!fontsLoaded || loading) {
     return null;
   }
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onLayout={onLayoutRootView}
-      onPress={toggleModal}
-    >
-      <TouchableImagePoD
-        uri={data?.url}
-        imageTitle={data?.title}
-        mediaType={data?.media_type}
-        isLoading={imageLoading}
-        onLoadImage={handleImageLoad}
-        onErrorImage={handleImageError}
-      />
-      <ModalLayout isVisible={isModalVisible} onRequestClose={toggleModal}>
-        <ModalContent
-          title={data?.title}
-          body={data?.explanation}
-          imgSrc={data?.url}
-          mediaType={data?.media_type}
-          videoId={videoId}
-          onCloseModal={toggleModal}
-          onLoadImage={handleImageLoad}
-          onErrorImage={handleImageError}
-          onPressCallToAction={onPressCallToAction}
-        />
-      </ModalLayout>
-    </TouchableOpacity>
+    <PanGestureHandler onGestureEvent={onGestureEvent}>
+      <Animated.View
+        style={[styles.card, animatedCardStyle]}
+        onLayout={onLayoutRootView}
+      >
+        <Pressable onPress={toggleModal}>
+          <TouchableImagePoD
+            uri={data?.url}
+            imageTitle={data?.title}
+            mediaType={data?.media_type}
+            isLoading={imageLoading}
+            onLoadImage={handleImageLoad}
+            onErrorImage={handleImageError}
+          />
+          <ModalLayout isVisible={isModalVisible} onRequestClose={toggleModal}>
+            <ModalContent
+              title={data?.title}
+              body={data?.explanation}
+              imgSrc={data?.url}
+              mediaType={data?.media_type}
+              videoId={videoId}
+              onCloseModal={toggleModal}
+              onLoadImage={handleImageLoad}
+              onErrorImage={handleImageError}
+              onPressCallToAction={onPressCallToAction}
+            />
+          </ModalLayout>
+        </Pressable>
+      </Animated.View>
+    </PanGestureHandler>
   );
 };
 
@@ -226,7 +284,6 @@ export const ModalContent: React.FC<ModalContentProps> = ({
   const snapPoints = useMemo(() => ["40%", "100%"], []);
 
   const handleSheetChanges = useCallback((index: number) => {
-    console.log("handleSheetChanges", index);
     if (index <= 0) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }, []);
@@ -253,8 +310,9 @@ export const ModalContent: React.FC<ModalContentProps> = ({
       )}
       <BottomSheet
         ref={bottomSheetRef}
-        handleIndicatorStyle={{ backgroundColor: "#fefefe" }}
-        backgroundStyle={{ backgroundColor: "#000" }}
+        style={{ borderRadius: 0 }}
+        handleIndicatorStyle={{ display: "none" }}
+        backgroundStyle={{ backgroundColor: "#010101" }}
         index={0}
         snapPoints={snapPoints}
         onChange={handleSheetChanges}
@@ -327,9 +385,10 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
         }
         style={styles.overlay}
       >
-        <Text style={styles.overlayText}>
-          {mediaType === "image" ? "Picture of the day" : imageTitle}
-        </Text>
+        <BlurView intensity={20} style={styles.blurView}>
+          <Text style={styles.overlayText}>Picture of The Day</Text>
+          <Text style={styles.overlayTitle}>{imageTitle}</Text>
+        </BlurView>
       </LinearGradient>
     </View>
   );
@@ -340,7 +399,24 @@ const styles = StyleSheet.create({
     marginHorizontal: 30,
     marginBottom: 55,
     marginTop: 32,
-    overflow: "hidden"
+    overflow: "hidden",
+    shadowColor: '#fff',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  blurView: {
+    padding: 20,
+    gap: 10
+  },
+  overlayTitle: {
+    fontSize: 25,
+    fontFamily: "Satoshi-Bold",
+    color: "#fff"
   },
   modalContainer: {
     flex: 1,
@@ -365,6 +441,7 @@ const styles = StyleSheet.create({
     borderRadius: 20
   },
   modalTitle: {
+    marginTop: 20,
     fontSize: 30,
     alignSelf: "flex-start",
     color: "white",
@@ -403,19 +480,20 @@ const styles = StyleSheet.create({
 
   image: {
     width: "100%",
-    height: 200,
+    borderRadius: 10,
+    height: 400,
     objectFit: "cover"
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
-    padding: 16,
     backgroundColor: "rgba(0, 0, 0, 0.4)"
   },
   overlayText: {
-    fontFamily: "Satoshi-Italic",
+    fontFamily: "Satoshi-Regular",
     color: "white",
-    fontSize: 20,
+    textTransform: "uppercase",
+    fontSize: 13,
     fontWeight: "bold"
   },
   loadingText: {
