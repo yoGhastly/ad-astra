@@ -7,6 +7,7 @@ import React, {
   useState
 } from "react";
 import {
+  Animated,
   Pressable,
   Modal as RNModal,
   StyleSheet,
@@ -16,7 +17,7 @@ import {
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import * as Haptics from "expo-haptics";
-import { Gyroscope } from 'expo-sensors';
+import { Gyroscope } from "expo-sensors";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useFonts } from "expo-font";
 import { Image } from "expo-image";
@@ -29,8 +30,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Modal } from "./Modal";
 import { SafeAreaView } from "moti";
 import { BlurView } from "expo-blur";
-import Animated, { runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
-import { PanGestureHandler, PanGestureHandlerGestureEvent } from "react-native-gesture-handler";
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent
+} from "react-native-gesture-handler";
+import { Easing } from "react-native-reanimated";
 
 interface ModalLayoutProps {
   isVisible: boolean;
@@ -88,9 +92,15 @@ const XMarkIconWithHaptic = withHapticFeedback(XMarkIcon);
 const ArrowsPointingOutWithHaptic = withHapticFeedback(ArrowsPointingOut);
 const CallToActionWithHaptic = withHapticFeedback(CallToActionButton);
 
+type GestureContext = {
+  startX: number;
+  startY: number;
+};
+
 export const PictureOfTheDayCard: React.FC<{
   onPressCallToAction: () => void;
-}> = ({ onPressCallToAction }) => {
+  setImageSrc: React.Dispatch<React.SetStateAction<string>>;
+}> = ({ onPressCallToAction, setImageSrc }) => {
   const [fontsLoaded] = useFonts({
     "Satoshi-Bold": require("../../../assets/fonts/Satoshi-Bold.otf"),
     "Satoshi-Italic": require("../../../assets/fonts/Satoshi-Italic.otf"),
@@ -104,45 +114,91 @@ export const PictureOfTheDayCard: React.FC<{
   const [imageLoading, setImageLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
   const [videoId, setVideoId] = useState("");
-  const [gyroscopeData, setGyroscopeData] = useState({ x: 0, y: 0, z: 0 });
-  const rotation = useSharedValue(0);
+  const [gyroData, setGyroData] = useState({ x: 0, y: 0, z: 0 });
+  const tiltValue = new Animated.Value(0);
+  const glowValue = useRef(new Animated.Value(0)).current;
 
-  const movingAverage = (currentValue, previousValue, factor = 0.9) => {
-    return previousValue + factor * (currentValue - previousValue);
-  };
-
-  const _subscribeToGyroscope = () => {
-    Gyroscope.setUpdateInterval(16);
-    Gyroscope.addListener(gyroscopeData => {
-      setGyroscopeData(prevData => ({
-        x: movingAverage(gyroscopeData.x, prevData.x),
-        y: movingAverage(gyroscopeData.y, prevData.y),
-        z: movingAverage(gyroscopeData.z, prevData.z),
-      }));
-    });
+  const _subscribeToGyroscope = async () => {
+    try {
+      Gyroscope.setUpdateInterval(16);
+      Gyroscope.addListener((data) => {
+        setGyroData(data);
+      });
+    } catch (error) {
+      console.error("Error subscribing to gyroscope:", error);
+    }
   };
 
   const _unsubscribeFromGyroscope = () => {
     Gyroscope.removeAllListeners();
   };
 
-  const onGestureEvent = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
-      ctx.startX = rotation.value;
-    },
-    onActive: (event, ctx) => {
-      // Use runOnJS to execute UI-related code inside the UI thread
-      runOnJS((value: number) => {
-        rotation.value = ctx.startX + event.translationX / 10; // Adjust the sensitivity
-      })(rotation.value);
-    },
-  });
+  useEffect(() => {
+    const tiltX = gyroscopeToTilt(gyroData.x);
+    Animated.timing(tiltValue, {
+      toValue: tiltX,
+      duration: 100,
+      easing: Easing.linear,
+      useNativeDriver: true
+    }).start();
+  }, [gyroData]);
+
+  const gyroscopeToTilt = (gyroValue: number) => {
+    // Adjust this factor based on your desired sensitivity
+    const sensitivityFactor = 1.5;
+    return gyroValue * sensitivityFactor;
+  };
+
+  const tiltStyle = {
+    transform: [
+      { perspective: 1000 },
+      {
+        rotateX: tiltValue.interpolate({
+          inputRange: [-180, 180],
+          outputRange: ["-180deg", "180deg"]
+        })
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const startGlowAnimation = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowValue, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true
+          }),
+          Animated.timing(glowValue, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true
+          })
+        ])
+      ).start();
+    };
+
+    startGlowAnimation();
+  }, [glowValue]);
+
+  const glowStyle = {
+    shadowColor: "#00FF00", // Adjust the color as needed
+    shadowRadius: 10,
+    shadowOpacity: glowValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 0.8]
+    }),
+    elevation: 5 // For Android
+  };
 
   const fetchData = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}`);
-      const result = await response.json();
+      const result: ApiResponse = await response.json();
       setData(result);
+      const isImageType = result.media_type === "image";
+      setImageSrc(isImageType ? result.url : "");
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -194,51 +250,39 @@ export const PictureOfTheDayCard: React.FC<{
     setModalVisible(!isModalVisible);
   };
 
-  const animatedCardStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: gyroscopeData.x * 2 }, // Adjust the sensitivity
-        { translateY: gyroscopeData.y * 2 },
-        { rotateZ: `${rotation.value}deg` },
-      ],
-    };
-  });
-
   if (!fontsLoaded || loading) {
     return null;
   }
 
   return (
-    <PanGestureHandler onGestureEvent={onGestureEvent}>
-      <Animated.View
-        style={[styles.card, animatedCardStyle]}
-        onLayout={onLayoutRootView}
-      >
-        <Pressable onPress={toggleModal}>
-          <TouchableImagePoD
-            uri={data?.url}
-            imageTitle={data?.title}
+    <Animated.View
+      style={[styles.card, tiltStyle, glowStyle]}
+      onLayout={onLayoutRootView}
+    >
+      <Pressable onPress={toggleModal}>
+        <TouchableImagePoD
+          uri={data?.url}
+          imageTitle={data?.title}
+          mediaType={data?.media_type}
+          isLoading={imageLoading}
+          onLoadImage={handleImageLoad}
+          onErrorImage={handleImageError}
+        />
+        <ModalLayout isVisible={isModalVisible} onRequestClose={toggleModal}>
+          <ModalContent
+            title={data?.title}
+            body={data?.explanation}
+            imgSrc={data?.url}
             mediaType={data?.media_type}
-            isLoading={imageLoading}
+            videoId={videoId}
+            onCloseModal={toggleModal}
             onLoadImage={handleImageLoad}
             onErrorImage={handleImageError}
+            onPressCallToAction={onPressCallToAction}
           />
-          <ModalLayout isVisible={isModalVisible} onRequestClose={toggleModal}>
-            <ModalContent
-              title={data?.title}
-              body={data?.explanation}
-              imgSrc={data?.url}
-              mediaType={data?.media_type}
-              videoId={videoId}
-              onCloseModal={toggleModal}
-              onLoadImage={handleImageLoad}
-              onErrorImage={handleImageError}
-              onPressCallToAction={onPressCallToAction}
-            />
-          </ModalLayout>
-        </Pressable>
-      </Animated.View>
-    </PanGestureHandler>
+        </ModalLayout>
+      </Pressable>
+    </Animated.View>
   );
 };
 
@@ -400,14 +444,7 @@ const styles = StyleSheet.create({
     marginBottom: 55,
     marginTop: 32,
     overflow: "hidden",
-    shadowColor: '#fff',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    borderRadius: 10
   },
   blurView: {
     padding: 20,

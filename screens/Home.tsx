@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { useCallback } from "react";
@@ -26,6 +26,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     "Satoshi-Regular": require("../assets/fonts/Satoshi-Regular.otf"),
     "Zodiak-Bold": require("../assets/fonts/Zodiak-Bold.otf")
   });
+  const [imageSrc, setImageSrc] = useState("");
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -108,6 +109,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         </Text>
         <PictureOfTheDayCard
           onPressCallToAction={() => navigation.navigate("Home")}
+          setImageSrc={setImageSrc}
         />
       </ScrollView>
       <BottomNavigation />
