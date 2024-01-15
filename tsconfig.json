@@ -1,8 +1,17 @@
 {
     "extends": "expo/tsconfig.base",
     "compilerOptions": {
-        "strict": true
+        "strict": true,
+        "baseUrl": "/",
+        "paths": {
+            "@/*": [
+                "/*"
+            ]
+        }
     },
+    "include": [
+        "/*"
+    ],
     "exclude": [
         "__tests__/**/*-test.ts"
     ]

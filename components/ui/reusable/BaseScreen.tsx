@@ -17,8 +17,9 @@ export const BaseScreen: React.FC<{
     <SafeAreaView
       style={{
         ...defaultStyles,
-        ...style // Merge user-provided styles
+        ...style
       }}
+      {...props}
       onLayout={onLayoutRootView}
     >
       {children}

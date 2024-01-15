@@ -1,5 +1,4 @@
 import React, {
-  ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -12,7 +11,6 @@ import {
   Modal as RNModal,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
@@ -30,51 +28,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Modal } from "./Modal";
 import { SafeAreaView } from "moti";
 import { BlurView } from "expo-blur";
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent
-} from "react-native-gesture-handler";
 import { Easing } from "react-native-reanimated";
-
-interface ModalLayoutProps {
-  isVisible: boolean;
-  children: ReactNode;
-  onRequestClose: () => void;
-}
-
-interface ModalContentProps {
-  mediaType: "image" | "video" | undefined;
-  imgSrc: string | undefined;
-  videoId: string;
-  title: string | undefined;
-  body: string | undefined;
-  onCloseModal: () => void;
-  onPressCallToAction: () => void;
-  onLoadImage: () => void;
-  onErrorImage: () => void;
-}
-
-interface TouchableImagePoDProps {
-  uri: string | undefined;
-  imageTitle: string | undefined;
-  mediaType: "image" | "video" | undefined;
-  isLoading: boolean;
-  onLoadImage: () => void;
-  onErrorImage: () => void;
-}
-type ApiResponse = {
-  copyright: string;
-  date: string;
-  explanation: string;
-  hdurl: string;
-  media_type: "image" | "video";
-  service_version: "v1";
-  title: string;
-  url: string;
-};
+import { PictureOfTheDayResponse } from "../../../types/api";
+import {
+  ModalContentProps,
+  ModalLayoutProps,
+  TouchableImagePoDProps
+} from "../../../types/pictureOfTheDay";
+import useRequest, { GetRequest } from "../../../helpers/fetcher";
 
 const gradientList = {
-  imageType: ["transparent", "transparent", "rgba(0, 0, 0, 0.9)"],
+  imageType: ["transparent", "transparent", "rgba(0, 0, 0, 0.8)"],
   videoType: ["transparent", "blue"]
 };
 
@@ -92,15 +56,12 @@ const XMarkIconWithHaptic = withHapticFeedback(XMarkIcon);
 const ArrowsPointingOutWithHaptic = withHapticFeedback(ArrowsPointingOut);
 const CallToActionWithHaptic = withHapticFeedback(CallToActionButton);
 
-type GestureContext = {
-  startX: number;
-  startY: number;
-};
+const tiltValue = new Animated.ValueXY({ x: 0, y: 0 });
+const sensitivityFactor = 0.3;
 
 export const PictureOfTheDayCard: React.FC<{
   onPressCallToAction: () => void;
-  setImageSrc: React.Dispatch<React.SetStateAction<string>>;
-}> = ({ onPressCallToAction, setImageSrc }) => {
+}> = ({ onPressCallToAction }) => {
   const [fontsLoaded] = useFonts({
     "Satoshi-Bold": require("../../../assets/fonts/Satoshi-Bold.otf"),
     "Satoshi-Italic": require("../../../assets/fonts/Satoshi-Italic.otf"),
@@ -109,102 +70,49 @@ export const PictureOfTheDayCard: React.FC<{
     "Zodiak-Regular": require("../../../assets/fonts/Zodiak-Regular.otf")
   });
 
-  const [data, setData] = useState<ApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
   const [videoId, setVideoId] = useState("");
-  const [gyroData, setGyroData] = useState({ x: 0, y: 0, z: 0 });
-  const tiltValue = new Animated.Value(0);
-  const glowValue = useRef(new Animated.Value(0)).current;
 
-  const _subscribeToGyroscope = async () => {
-    try {
-      Gyroscope.setUpdateInterval(16);
-      Gyroscope.addListener((data) => {
-        setGyroData(data);
-      });
-    } catch (error) {
-      console.error("Error subscribing to gyroscope:", error);
-    }
-  };
+  useEffect(() => {
+    const _subscribeToGyroscope = async () => {
+      try {
+        Gyroscope.setUpdateInterval(16);
+        Gyroscope.addListener((data) => {
+          const scaledData = {
+            x: data.x * sensitivityFactor,
+            y: data.y * sensitivityFactor
+          };
+
+          Animated.spring(tiltValue, {
+            toValue: { x: -scaledData.y, y: scaledData.x },
+            friction: 3,
+            useNativeDriver: false // NOTE:Animated.spring does not support native driver for this configuration
+          }).start();
+        });
+      } catch (error) {
+        console.error("Error subscribing to gyroscope:", error);
+      }
+    };
+
+    _subscribeToGyroscope();
+
+    return () => {
+      _unsubscribeFromGyroscope();
+    };
+  }, []);
 
   const _unsubscribeFromGyroscope = () => {
     Gyroscope.removeAllListeners();
   };
 
-  useEffect(() => {
-    const tiltX = gyroscopeToTilt(gyroData.x);
-    Animated.timing(tiltValue, {
-      toValue: tiltX,
-      duration: 100,
-      easing: Easing.linear,
-      useNativeDriver: true
-    }).start();
-  }, [gyroData]);
-
-  const gyroscopeToTilt = (gyroValue: number) => {
-    // Adjust this factor based on your desired sensitivity
-    const sensitivityFactor = 1.5;
-    return gyroValue * sensitivityFactor;
+  const requestConfig: GetRequest = {
+    method: "GET",
+    url: `${API_BASE_URL}`
   };
 
-  const tiltStyle = {
-    transform: [
-      { perspective: 1000 },
-      {
-        rotateX: tiltValue.interpolate({
-          inputRange: [-180, 180],
-          outputRange: ["-180deg", "180deg"]
-        })
-      }
-    ]
-  };
-
-  useEffect(() => {
-    const startGlowAnimation = () => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowValue, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true
-          }),
-          Animated.timing(glowValue, {
-            toValue: 0,
-            duration: 1000,
-            useNativeDriver: true
-          })
-        ])
-      ).start();
-    };
-
-    startGlowAnimation();
-  }, [glowValue]);
-
-  const glowStyle = {
-    shadowColor: "#00FF00", // Adjust the color as needed
-    shadowRadius: 10,
-    shadowOpacity: glowValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 0.8]
-    }),
-    elevation: 5 // For Android
-  };
-
-  const fetchData = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}`);
-      const result: ApiResponse = await response.json();
-      setData(result);
-      const isImageType = result.media_type === "image";
-      setImageSrc(isImageType ? result.url : "");
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setLoading(false);
-    }
-  }, []);
+  const { data: apiData, error } =
+    useRequest<PictureOfTheDayResponse>(requestConfig);
 
   const getVideoId = (uri: string): string | null => {
     const regex =
@@ -217,26 +125,14 @@ export const PictureOfTheDayCard: React.FC<{
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
       await SplashScreen.hideAsync();
-      fetchData(); // Fetch data when fonts are loaded
     }
-  }, [fontsLoaded, fetchData]);
+  }, [fontsLoaded]);
 
   useEffect(() => {
-    fetchData(); // Initial data fetch
-  }, [fetchData]);
-
-  useEffect(() => {
-    if (!data) return;
-    const videoId = getVideoId(data?.url as string);
+    if (!apiData) return;
+    const videoId = getVideoId(apiData?.url as string);
     setVideoId(videoId as string);
-  }, [data]);
-
-  useEffect(() => {
-    _subscribeToGyroscope();
-    return () => {
-      _unsubscribeFromGyroscope();
-    };
-  }, []);
+  }, [apiData]);
 
   const handleImageLoad = () => {
     setImageLoading(false);
@@ -250,30 +146,56 @@ export const PictureOfTheDayCard: React.FC<{
     setModalVisible(!isModalVisible);
   };
 
-  if (!fontsLoaded || loading) {
+  if (error) {
+    console.error("Error fetching data:", error);
+    return;
+  }
+
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
     <Animated.View
-      style={[styles.card, tiltStyle, glowStyle]}
+      style={[
+        styles.card,
+        {
+          // Apply the tilt effect using the interpolated values
+          transform: [
+            { perspective: 1000 },
+            {
+              rotateX: tiltValue.y.interpolate({
+                inputRange: [-1, 1],
+                outputRange: ["10deg", "-10deg"]
+              })
+            },
+            {
+              rotateY: tiltValue.x.interpolate({
+                inputRange: [-1, 1],
+                outputRange: ["-10deg", "10deg"]
+              })
+            }
+          ]
+        }
+      ]}
       onLayout={onLayoutRootView}
     >
       <Pressable onPress={toggleModal}>
         <TouchableImagePoD
-          uri={data?.url}
-          imageTitle={data?.title}
-          mediaType={data?.media_type}
+          uri={apiData?.url}
+          imageTitle={apiData?.title}
+          mediaType={apiData?.media_type}
           isLoading={imageLoading}
           onLoadImage={handleImageLoad}
           onErrorImage={handleImageError}
         />
         <ModalLayout isVisible={isModalVisible} onRequestClose={toggleModal}>
           <ModalContent
-            title={data?.title}
-            body={data?.explanation}
-            imgSrc={data?.url}
-            mediaType={data?.media_type}
+            title={apiData?.title}
+            body={apiData?.explanation}
+            copyright={apiData?.copyright}
+            imgSrc={apiData?.url}
+            mediaType={apiData?.media_type}
             videoId={videoId}
             onCloseModal={toggleModal}
             onLoadImage={handleImageLoad}
@@ -306,6 +228,7 @@ const ModalLayout: React.FC<ModalLayoutProps> = ({
 export const ModalContent: React.FC<ModalContentProps> = ({
   title,
   body,
+  copyright,
   mediaType,
   imgSrc,
   videoId,
@@ -366,7 +289,7 @@ export const ModalContent: React.FC<ModalContentProps> = ({
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: 20,
+            gap: 10,
             alignItems: "center",
             flexDirection: "column",
             paddingVertical: 10
@@ -375,6 +298,7 @@ export const ModalContent: React.FC<ModalContentProps> = ({
           <SafeAreaView>
             <Text style={styles.modalTitle}>{title}</Text>
             <Text style={styles.modalText}>{body?.replace(/\. /g, ".\n")}</Text>
+            <Text style={[styles.modalText, { color: "#9d9d9d", fontSize: 13 }]}>&copy;{copyright}</Text>
           </SafeAreaView>
           <CallToActionWithHaptic onPress={onPressCallToAction} />
         </BottomSheetView>
@@ -429,10 +353,12 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
         }
         style={styles.overlay}
       >
-        <BlurView intensity={20} style={styles.blurView}>
-          <Text style={styles.overlayText}>Picture of The Day</Text>
-          <Text style={styles.overlayTitle}>{imageTitle}</Text>
-        </BlurView>
+        <View style={styles.blurredChipWrapper}>
+          <BlurView style={styles.blurredChip} intensity={40} tint="dark">
+            <Text style={styles.overlayText}>Picture of The Day</Text>
+          </BlurView>
+        </View>
+        <Text style={styles.overlayTitle}>{imageTitle}</Text>
       </LinearGradient>
     </View>
   );
@@ -446,14 +372,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: 10
   },
-  blurView: {
-    padding: 20,
-    gap: 10
-  },
   overlayTitle: {
     fontSize: 25,
     fontFamily: "Satoshi-Bold",
-    color: "#fff"
+    color: "#fff",
+    margin: 20
   },
   modalContainer: {
     flex: 1,
@@ -525,6 +448,19 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.4)"
+  },
+  blurredChipWrapper: {
+    position: "absolute",
+    top: 20,
+    left: 10,
+    borderRadius: 100,
+    overflow: "hidden"
+  },
+
+  blurredChip: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 10
   },
   overlayText: {
     fontFamily: "Satoshi-Regular",

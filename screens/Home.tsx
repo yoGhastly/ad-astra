@@ -11,10 +11,20 @@ import {
   PictureOfTheDayCard,
   withHapticFeedback
 } from "../components/ui/reusable";
-import { ScrollView } from "moti";
+import { SafeAreaView, ScrollView } from "react-native";
 import clsx from "clsx";
 import { ConfigIcon, ShareIcon } from "../components/svg/icons";
 import { onShare } from "../helpers/shareApp";
+import DropShadow from "react-native-drop-shadow";
+import useRequest from "../helpers/fetcher";
+import { DominantColorsResponse } from "../types/api";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming
+} from "react-native-reanimated";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,13 +36,64 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     "Satoshi-Regular": require("../assets/fonts/Satoshi-Regular.otf"),
     "Zodiak-Bold": require("../assets/fonts/Zodiak-Bold.otf")
   });
-  const [imageSrc, setImageSrc] = useState("");
+  const [isBottomNavigationVisible, setIsBottomNavigationVisible] =
+    useState(true);
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(1);
+  let previousOffset = 0;
+
+  const { data: dominantColors, error } = useRequest<DominantColorsResponse>({
+    url: "https://ad-astra-api-production.up.railway.app",
+    method: "GET"
+  });
+
+  const gradientDominantColorsList = [
+    Array(6).fill("transparent"),
+    `#${dominantColors?.colors[0] as string}`,
+    `#${dominantColors?.colors[1] as string}`
+  ];
+
+  const handleScroll = (event) => {
+    const currentOffset = event.nativeEvent.contentOffset.y;
+    const direction =
+      currentOffset > 0 && currentOffset > previousOffset ? "down" : "up";
+    previousOffset = currentOffset;
+
+    const threshold = 10;
+
+    if (direction === "down" && isBottomNavigationVisible) {
+      setTimeout(() => {
+        setIsBottomNavigationVisible(false);
+        opacity.value = withSpring(0); // Fade out
+        translateY.value = withTiming(100);
+      }, 2300);
+    } else if (
+      direction === "up" &&
+      !isBottomNavigationVisible &&
+      currentOffset < threshold
+    ) {
+      setIsBottomNavigationVisible(true);
+      opacity.value = withSpring(1); // Fade in
+      translateY.value = withTiming(0);
+    }
+  };
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+      opacity: opacity.value
+    };
+  });
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
       await SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  if (error) {
+    console.error("Error fetching dominant colors", error);
+  }
 
   if (!fontsLoaded) {
     return null;
@@ -44,7 +105,11 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         startContent={<ConfigIcon />}
         endContent={<ShareIconWithHaptic onPress={onShare} />}
       />
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        scrollEventThrottle={16}
+        onScroll={handleScroll}
+      >
         <View
           style={{
             flex: 1,
@@ -105,14 +170,36 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           style={{ fontFamily: "Satoshi-Regular" }}
         >
           Each day a different image or photograph of our fascinating{" "}
-          <Text className={clsx("text-secondary/80")}>universe.</Text>
+          <Text style={{ color: `#${dominantColors?.colors[2]}` }}>
+            universe.
+          </Text>
         </Text>
-        <PictureOfTheDayCard
-          onPressCallToAction={() => navigation.navigate("Home")}
-          setImageSrc={setImageSrc}
-        />
+        <LinearGradient colors={gradientDominantColorsList as string[]}>
+          <DropShadow
+            style={{
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 0
+              },
+              shadowOpacity: 0.8,
+              shadowRadius: 10
+            }}
+          >
+            <PictureOfTheDayCard
+              onPressCallToAction={() => navigation.navigate("Home")}
+            />
+          </DropShadow>
+        </LinearGradient>
       </ScrollView>
-      <BottomNavigation />
+      <Animated.View
+        style={[
+          { ...animatedStyle },
+          { position: "absolute", bottom: 30, left: 0, right: 0 }
+        ]}
+      >
+        {isBottomNavigationVisible && <BottomNavigation />}
+      </Animated.View>
     </BaseScreen>
   );
 }
