@@ -36,6 +36,7 @@ import {
   TouchableImagePoDProps
 } from "../../../types/pictureOfTheDay";
 import useRequest, { GetRequest } from "../../../helpers/fetcher";
+import DropShadow from "react-native-drop-shadow";
 
 const gradientList = {
   imageType: ["transparent", "transparent", "rgba(0, 0, 0, 0.8)"],
@@ -298,7 +299,11 @@ export const ModalContent: React.FC<ModalContentProps> = ({
           <SafeAreaView>
             <Text style={styles.modalTitle}>{title}</Text>
             <Text style={styles.modalText}>{body?.replace(/\. /g, ".\n")}</Text>
-            <Text style={[styles.modalText, { color: "#9d9d9d", fontSize: 13 }]}>&copy;{copyright}</Text>
+            <Text
+              style={[styles.modalText, { color: "#9d9d9d", fontSize: 13 }]}
+            >
+              &copy;{copyright}
+            </Text>
           </SafeAreaView>
           <CallToActionWithHaptic onPress={onPressCallToAction} />
         </BottomSheetView>
@@ -354,9 +359,21 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
         style={styles.overlay}
       >
         <View style={styles.blurredChipWrapper}>
-          <BlurView style={styles.blurredChip} intensity={40} tint="dark">
-            <Text style={styles.overlayText}>Picture of The Day</Text>
-          </BlurView>
+          <DropShadow
+            style={{
+              shadowColor: "#9d9d9d",
+              shadowOffset: {
+                width: 2,
+                height: 2
+              },
+              shadowOpacity: 0.9,
+              shadowRadius: 100
+            }}
+          >
+            <BlurView style={styles.blurredChip} intensity={50} tint="dark">
+              <Text style={styles.overlayText}>Picture of The Day</Text>
+            </BlurView>
+          </DropShadow>
         </View>
         <Text style={styles.overlayTitle}>{imageTitle}</Text>
       </LinearGradient>

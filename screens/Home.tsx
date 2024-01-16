@@ -12,7 +12,6 @@ import {
   withHapticFeedback
 } from "../components/ui/reusable";
 import { SafeAreaView, ScrollView } from "react-native";
-import clsx from "clsx";
 import { ConfigIcon, ShareIcon } from "../components/svg/icons";
 import { onShare } from "../helpers/shareApp";
 import DropShadow from "react-native-drop-shadow";
@@ -31,6 +30,8 @@ SplashScreen.preventAutoHideAsync();
 const CheckInWithHaptic = withHapticFeedback(CheckInButton);
 const ShareIconWithHaptic = withHapticFeedback(ShareIcon);
 
+const transparentList = Array.from({ length: 4 }, () => "transparent");
+
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const [fontsLoaded] = useFonts({
     "Satoshi-Regular": require("../assets/fonts/Satoshi-Regular.otf"),
@@ -46,12 +47,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     url: "https://ad-astra-api-production.up.railway.app",
     method: "GET"
   });
-
-  const gradientDominantColorsList = [
-    Array(6).fill("transparent"),
-    `#${dominantColors?.colors[0] as string}`,
-    `#${dominantColors?.colors[1] as string}`
-  ];
 
   const handleScroll = (event) => {
     const currentOffset = event.nativeEvent.contentOffset.y;
@@ -92,7 +87,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   }, [fontsLoaded]);
 
   if (error) {
-    console.error("Error fetching dominant colors", error);
+    console.error("Error fetching dominant colors", error.message);
   }
 
   if (!fontsLoaded) {
@@ -170,11 +165,23 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           style={{ fontFamily: "Satoshi-Regular" }}
         >
           Each day a different image or photograph of our fascinating{" "}
-          <Text style={{ color: `#${dominantColors?.colors[2]}` }}>
+          <Text
+            style={{
+              color: `#${
+                dominantColors?.success ? dominantColors.colors[2] : "9d9d9d"
+              }`
+            }}
+          >
             universe.
           </Text>
         </Text>
-        <LinearGradient colors={gradientDominantColorsList as string[]}>
+        <LinearGradient
+          colors={[
+            ...transparentList,
+            `#${dominantColors?.colors[0]}`,
+            `#${dominantColors?.colors[1]}`
+          ]}
+        >
           <DropShadow
             style={{
               shadowColor: "#000",
