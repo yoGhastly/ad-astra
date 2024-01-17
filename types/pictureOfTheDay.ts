@@ -10,6 +10,7 @@ export interface ModalContentProps {
   mediaType: "image" | "video" | undefined;
   imgSrc: string | undefined;
   videoId: string;
+  copyright?: string;
   title: string | undefined;
   body: string | undefined;
   onCloseModal: () => void;

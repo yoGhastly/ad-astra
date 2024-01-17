@@ -1,5 +1,6 @@
 import useSWR, { SWRConfiguration, SWRResponse } from "swr";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type GetRequest = AxiosRequestConfig | null;
 
@@ -20,17 +21,24 @@ export interface Config<Data = unknown, Error = unknown>
   fallbackData?: Data;
 }
 
+export const getCacheKey = (request: GetRequest) => {
+  // Generate a unique cache key based on the request
+  return JSON.stringify(request);
+};
+
 export default function useRequest<Data = unknown, Error = unknown>(
   request: GetRequest,
   { fallbackData, ...config }: Config<Data, Error> = {}
 ): Return<Data, Error> {
+  const cacheKey = getCacheKey(request);
+
   const {
     data: response,
     error,
     isValidating,
     mutate
   } = useSWR<AxiosResponse<Data>, AxiosError<Error>>(
-    request,
+    cacheKey,
     /**
      * NOTE: Typescript thinks `request` can be `null` here, but the fetcher
      * function is actually only called by `useSWR` when it isn't.
@@ -51,6 +59,11 @@ export default function useRequest<Data = unknown, Error = unknown>(
         } as AxiosResponse<Data>)
     }
   );
+
+  // Update AsyncStorage when the response is successful
+  if (response?.data) {
+    AsyncStorage.setItem(cacheKey, JSON.stringify(response.data));
+  }
 
   return {
     data: response && response.data,

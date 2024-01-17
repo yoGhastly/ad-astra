@@ -35,8 +35,10 @@ import {
   ModalLayoutProps,
   TouchableImagePoDProps
 } from "../../../types/pictureOfTheDay";
-import useRequest, { GetRequest } from "../../../helpers/fetcher";
+import useRequest, { GetRequest, getCacheKey } from "../../../helpers/fetcher";
 import DropShadow from "react-native-drop-shadow";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCachedData } from "../../../hooks/useCache";
 
 const gradientList = {
   imageType: ["transparent", "transparent", "rgba(0, 0, 0, 0.8)"],
@@ -60,6 +62,11 @@ const CallToActionWithHaptic = withHapticFeedback(CallToActionButton);
 const tiltValue = new Animated.ValueXY({ x: 0, y: 0 });
 const sensitivityFactor = 0.3;
 
+const requestConfig: GetRequest = {
+  method: "GET",
+  url: `${API_BASE_URL}`
+};
+
 export const PictureOfTheDayCard: React.FC<{
   onPressCallToAction: () => void;
 }> = ({ onPressCallToAction }) => {
@@ -74,6 +81,9 @@ export const PictureOfTheDayCard: React.FC<{
   const [imageLoading, setImageLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
   const [videoId, setVideoId] = useState("");
+  const [cachedData, isValidating, error] =
+    useCachedData<PictureOfTheDayResponse>(requestConfig);
+  const apiData = cachedData;
 
   useEffect(() => {
     const _subscribeToGyroscope = async () => {
@@ -87,7 +97,7 @@ export const PictureOfTheDayCard: React.FC<{
 
           Animated.spring(tiltValue, {
             toValue: { x: -scaledData.y, y: scaledData.x },
-            friction: 3,
+            friction: 8,
             useNativeDriver: false // NOTE:Animated.spring does not support native driver for this configuration
           }).start();
         });
@@ -106,14 +116,6 @@ export const PictureOfTheDayCard: React.FC<{
   const _unsubscribeFromGyroscope = () => {
     Gyroscope.removeAllListeners();
   };
-
-  const requestConfig: GetRequest = {
-    method: "GET",
-    url: `${API_BASE_URL}`
-  };
-
-  const { data: apiData, error } =
-    useRequest<PictureOfTheDayResponse>(requestConfig);
 
   const getVideoId = (uri: string): string | null => {
     const regex =
@@ -183,7 +185,7 @@ export const PictureOfTheDayCard: React.FC<{
     >
       <Pressable onPress={toggleModal}>
         <TouchableImagePoD
-          uri={apiData?.url}
+          uri={apiData?.hdurl}
           imageTitle={apiData?.title}
           mediaType={apiData?.media_type}
           isLoading={imageLoading}
@@ -195,7 +197,7 @@ export const PictureOfTheDayCard: React.FC<{
             title={apiData?.title}
             body={apiData?.explanation}
             copyright={apiData?.copyright}
-            imgSrc={apiData?.url}
+            imgSrc={apiData?.hdurl}
             mediaType={apiData?.media_type}
             videoId={videoId}
             onCloseModal={toggleModal}
@@ -359,21 +361,9 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
         style={styles.overlay}
       >
         <View style={styles.blurredChipWrapper}>
-          <DropShadow
-            style={{
-              shadowColor: "#9d9d9d",
-              shadowOffset: {
-                width: 2,
-                height: 2
-              },
-              shadowOpacity: 0.9,
-              shadowRadius: 100
-            }}
-          >
-            <BlurView style={styles.blurredChip} intensity={50} tint="dark">
-              <Text style={styles.overlayText}>Picture of The Day</Text>
-            </BlurView>
-          </DropShadow>
+          <BlurView style={styles.blurredChip} intensity={25} tint="default">
+            <Text style={styles.overlayText}>Picture of The Day</Text>
+          </BlurView>
         </View>
         <Text style={styles.overlayTitle}>{imageTitle}</Text>
       </LinearGradient>

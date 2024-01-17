@@ -11,7 +11,7 @@ import {
   PictureOfTheDayCard,
   withHapticFeedback
 } from "../components/ui/reusable";
-import { SafeAreaView, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 import { ConfigIcon, ShareIcon } from "../components/svg/icons";
 import { onShare } from "../helpers/shareApp";
 import DropShadow from "react-native-drop-shadow";
@@ -30,7 +30,12 @@ SplashScreen.preventAutoHideAsync();
 const CheckInWithHaptic = withHapticFeedback(CheckInButton);
 const ShareIconWithHaptic = withHapticFeedback(ShareIcon);
 
-const transparentList = Array.from({ length: 4 }, () => "transparent");
+const transparentList = Array.from({ length: 2 }, () => "transparent");
+
+const requestConfig = {
+  url: "https://ad-astra-api-production.up.railway.app",
+  method: "GET"
+};
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const [fontsLoaded] = useFonts({
@@ -43,10 +48,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const opacity = useSharedValue(1);
   let previousOffset = 0;
 
-  const { data: dominantColors, error } = useRequest<DominantColorsResponse>({
-    url: "https://ad-astra-api-production.up.railway.app",
-    method: "GET"
-  });
+  const { data: dominantColors, error } =
+    useRequest<DominantColorsResponse>(requestConfig);
 
   const handleScroll = (event) => {
     const currentOffset = event.nativeEvent.contentOffset.y;
@@ -167,9 +170,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           Each day a different image or photograph of our fascinating{" "}
           <Text
             style={{
-              color: `#${
-                dominantColors?.success ? dominantColors.colors[2] : "9d9d9d"
-              }`
+              color: `#${dominantColors ? dominantColors.colors[1] : "9d9d9d"}`
             }}
           >
             universe.
