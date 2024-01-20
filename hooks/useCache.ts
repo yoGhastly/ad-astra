@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsConnected } from "react-native-offline";
 import useRequest, { GetRequest, getCacheKey } from "../helpers/fetcher";
 
 export function useCachedData<Data>(
   requestConfig: GetRequest
-): [Data | undefined, boolean, Error | undefined] {
+): [Data | undefined] {
   const [cachedData, setCachedData] = useState<Data | undefined>();
   const cacheKey = getCacheKey(requestConfig);
-
-  const { data, error, isValidating } = useRequest<Data>(requestConfig, {
-    fallbackData: cachedData // Set the cached data as fallback data
-  });
 
   useEffect(() => {
     const getCachedData = async () => {
@@ -29,5 +26,5 @@ export function useCachedData<Data>(
     getCachedData();
   }, [cacheKey]);
 
-  return [data, isValidating, error];
+  return [cachedData];
 }

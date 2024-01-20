@@ -9,6 +9,7 @@ import {
   Animated,
   Pressable,
   Modal as RNModal,
+  ScrollView,
   StyleSheet,
   Text,
   View
@@ -81,8 +82,7 @@ export const PictureOfTheDayCard: React.FC<{
   const [imageLoading, setImageLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
   const [videoId, setVideoId] = useState("");
-  const [cachedData, isValidating, error] =
-    useCachedData<PictureOfTheDayResponse>(requestConfig);
+  const [cachedData] = useCachedData<PictureOfTheDayResponse>(requestConfig);
   const apiData = cachedData;
 
   useEffect(() => {
@@ -148,11 +148,6 @@ export const PictureOfTheDayCard: React.FC<{
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
-
-  if (error) {
-    console.error("Error fetching data:", error);
-    return;
-  }
 
   if (!fontsLoaded) {
     return null;
@@ -300,14 +295,25 @@ export const ModalContent: React.FC<ModalContentProps> = ({
         >
           <SafeAreaView>
             <Text style={styles.modalTitle}>{title}</Text>
-            <Text style={styles.modalText}>{body?.replace(/\. /g, ".\n")}</Text>
-            <Text
-              style={[styles.modalText, { color: "#9d9d9d", fontSize: 13 }]}
+            <ScrollView
+              contentContainerStyle={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 30
+              }}
             >
-              &copy;{copyright}
-            </Text>
+              <Text style={styles.modalText}>{body}</Text>
+              {copyright && (
+                <Text
+                  style={[styles.modalText, { color: "#9d9d9d", fontSize: 13 }]}
+                >
+                  &copy;{copyright}
+                </Text>
+              )}
+              <CallToActionWithHaptic onPress={onPressCallToAction} />
+            </ScrollView>
           </SafeAreaView>
-          <CallToActionWithHaptic onPress={onPressCallToAction} />
         </BottomSheetView>
       </BottomSheet>
 
@@ -361,7 +367,7 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
         style={styles.overlay}
       >
         <View style={styles.blurredChipWrapper}>
-          <BlurView style={styles.blurredChip} intensity={25} tint="default">
+          <BlurView style={styles.blurredChip} intensity={20} tint="default">
             <Text style={styles.overlayText}>Picture of The Day</Text>
           </BlurView>
         </View>
@@ -408,7 +414,6 @@ const styles = StyleSheet.create({
     borderRadius: 20
   },
   modalTitle: {
-    marginTop: 20,
     fontSize: 30,
     alignSelf: "flex-start",
     color: "white",

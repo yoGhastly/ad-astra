@@ -1,3 +1,4 @@
+import React from "react";
 import { StyleSheet } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
@@ -51,8 +52,8 @@ function PlusIconColored() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    left: "22%",
-    top: "40%"
+    left: "28%",
+    top: "43%"
   }
 });
 

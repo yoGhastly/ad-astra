@@ -32,6 +32,14 @@ const positions = [
   {
     cx: "115.9",
     cy: "69.9"
+  },
+  {
+    cx: "85.9",
+    cy: "99.9"
+  },
+  {
+    cx: "115.9",
+    cy: "69.9"
   }
 ];
 
@@ -40,8 +48,8 @@ const MotiCircle = motifySvg(Circle)();
 const CircularGradient = () => {
   return (
     <Svg
-      width="200"
-      height="200"
+      width="250"
+      height="250"
       viewBox="0 0 139 139"
       fill="none"
       style={styles.svg}
@@ -76,7 +84,7 @@ const CircularGradient = () => {
           }}
           transition={{
             loop: true,
-            duration: 3000,
+            duration: 4000,
             type: "timing",
             easing: Easing.linear
           }}

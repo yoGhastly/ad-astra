@@ -24,6 +24,7 @@ import Animated, {
   withSpring,
   withTiming
 } from "react-native-reanimated";
+import { useIsConnected } from "react-native-offline";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -170,7 +171,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           Each day a different image or photograph of our fascinating{" "}
           <Text
             style={{
-              color: `#${dominantColors ? dominantColors.colors[1] : "9d9d9d"}`
+              color: `#${dominantColors ? dominantColors.colors[1] : "5B3BCC"}`
             }}
           >
             universe.
@@ -180,7 +181,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           colors={[
             ...transparentList,
             `#${dominantColors?.colors[0]}`,
-            `#${dominantColors?.colors[1]}`
+            `#${dominantColors?.colors[dominantColors.colors.length - 1]}`
           ]}
         >
           <DropShadow
@@ -190,7 +191,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 width: 0,
                 height: 0
               },
-              shadowOpacity: 0.8,
+              shadowOpacity: 0.9,
               shadowRadius: 10
             }}
           >

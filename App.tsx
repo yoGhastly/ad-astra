@@ -1,5 +1,7 @@
+import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { NetworkProvider } from "react-native-offline";
 import HomeScreen from "./screens/Home";
 import CheckIn from "./screens/CheckIn";
 import EmotionCircles from "./screens/EmotionCircles";
@@ -12,16 +14,18 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <NavigationContainer>
-          <Stack.Navigator
-            initialRouteName="Home"
-            screenOptions={{ headerShown: false }}
-          >
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="CheckIn" component={CheckIn} />
-            <Stack.Screen name="SearchEmotions" component={EmotionCircles} />
-          </Stack.Navigator>
-        </NavigationContainer>
+        <NetworkProvider>
+          <NavigationContainer>
+            <Stack.Navigator
+              initialRouteName="Home"
+              screenOptions={{ headerShown: false }}
+            >
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="CheckIn" component={CheckIn} />
+              <Stack.Screen name="SearchEmotions" component={EmotionCircles} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </NetworkProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
