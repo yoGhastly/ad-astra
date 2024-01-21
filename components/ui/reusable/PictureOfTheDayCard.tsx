@@ -30,21 +30,16 @@ import { Modal } from "./Modal";
 import { SafeAreaView } from "moti";
 import { BlurView } from "expo-blur";
 import { Easing } from "react-native-reanimated";
-import { PictureOfTheDayResponse } from "../../../types/api";
+import {
+  DominantColorsResponse,
+  PictureOfTheDayResponse
+} from "../../../types/api";
 import {
   ModalContentProps,
   ModalLayoutProps,
   TouchableImagePoDProps
 } from "../../../types/pictureOfTheDay";
-import useRequest, { GetRequest, getCacheKey } from "../../../helpers/fetcher";
-import DropShadow from "react-native-drop-shadow";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useCachedData } from "../../../hooks/useCache";
-
-const gradientList = {
-  imageType: ["transparent", "transparent", "rgba(0, 0, 0, 0.8)"],
-  videoType: ["transparent", "blue"]
-};
+import useRequest, { GetRequest } from "../../../helpers/fetcher";
 
 function CallToActionButton() {
   return (
@@ -70,7 +65,8 @@ const requestConfig: GetRequest = {
 
 export const PictureOfTheDayCard: React.FC<{
   onPressCallToAction: () => void;
-}> = ({ onPressCallToAction }) => {
+  dominantColors: DominantColorsResponse["colors"];
+}> = ({ onPressCallToAction, dominantColors }) => {
   const [fontsLoaded] = useFonts({
     "Satoshi-Bold": require("../../../assets/fonts/Satoshi-Bold.otf"),
     "Satoshi-Italic": require("../../../assets/fonts/Satoshi-Italic.otf"),
@@ -82,8 +78,8 @@ export const PictureOfTheDayCard: React.FC<{
   const [imageLoading, setImageLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
   const [videoId, setVideoId] = useState("");
-  const [cachedData] = useCachedData<PictureOfTheDayResponse>(requestConfig);
-  const apiData = cachedData;
+
+  const { data: apiData } = useRequest<PictureOfTheDayResponse>(requestConfig);
 
   useEffect(() => {
     const _subscribeToGyroscope = async () => {
@@ -182,6 +178,7 @@ export const PictureOfTheDayCard: React.FC<{
         <TouchableImagePoD
           uri={apiData?.hdurl}
           imageTitle={apiData?.title}
+          gradientOverlayColors={dominantColors}
           mediaType={apiData?.media_type}
           isLoading={imageLoading}
           onLoadImage={handleImageLoad}
@@ -344,9 +341,12 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
   imageTitle,
   mediaType,
   isLoading,
+  gradientOverlayColors,
   onLoadImage,
   onErrorImage
 }) => {
+  const linearGradientColors = gradientOverlayColors.map((c) => `#${c}`);
+
   return (
     <View>
       <Image
@@ -359,11 +359,7 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
       />
       {isLoading && <Text style={styles.loadingText}>Loading Image...</Text>}
       <LinearGradient
-        colors={
-          mediaType === "image"
-            ? gradientList.imageType
-            : gradientList.videoType
-        }
+        colors={linearGradientColors.map((color) => color + "30")} // '80' sets the alpha channel to 0.5 (adjust as needed)
         style={styles.overlay}
       >
         <View style={styles.blurredChipWrapper}>
@@ -449,7 +445,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center"
   },
-
   image: {
     width: "100%",
     borderRadius: 10,
@@ -457,9 +452,15 @@ const styles = StyleSheet.create({
     objectFit: "cover"
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.4)"
+    alignItems: "flex-start",
+    opacity: 1,
+    paddingVertical: 15
   },
   blurredChipWrapper: {
     position: "absolute",

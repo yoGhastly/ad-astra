@@ -21,6 +21,7 @@ export interface ModalContentProps {
 
 export interface TouchableImagePoDProps {
   uri: string | undefined;
+  gradientOverlayColors: string[];
   imageTitle: string | undefined;
   mediaType: "image" | "video" | undefined;
   isLoading: boolean;

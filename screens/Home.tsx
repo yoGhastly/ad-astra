@@ -11,7 +11,11 @@ import {
   PictureOfTheDayCard,
   withHapticFeedback
 } from "../components/ui/reusable";
-import { ScrollView } from "react-native";
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView
+} from "react-native";
 import { ConfigIcon, ShareIcon } from "../components/svg/icons";
 import { onShare } from "../helpers/shareApp";
 import DropShadow from "react-native-drop-shadow";
@@ -52,7 +56,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const { data: dominantColors, error } =
     useRequest<DominantColorsResponse>(requestConfig);
 
-  const handleScroll = (event) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentOffset = event.nativeEvent.contentOffset.y;
     const direction =
       currentOffset > 0 && currentOffset > previousOffset ? "down" : "up";
@@ -197,6 +201,11 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           >
             <PictureOfTheDayCard
               onPressCallToAction={() => navigation.navigate("Home")}
+              dominantColors={
+                dominantColors?.success
+                  ? dominantColors.colors
+                  : transparentList
+              }
             />
           </DropShadow>
         </LinearGradient>
