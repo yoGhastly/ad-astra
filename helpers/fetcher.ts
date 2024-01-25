@@ -1,6 +1,7 @@
 import useSWR, { SWRConfiguration, SWRResponse } from "swr";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsConnected } from "react-native-offline";
 import { useCachedData } from "../hooks/useCache";
 
 export type GetRequest = AxiosRequestConfig | null;
@@ -32,7 +33,7 @@ export default function useRequest<Data = unknown, Error = unknown>(
   { fallbackData, ...config }: Config<Data, Error> = {}
 ): Return<Data, Error> {
   const cacheKey = getCacheKey(request);
-
+  const isConnected = useIsConnected();
   const [cachedData, isFetching] = useCachedData<Data>(request);
 
   const {
@@ -69,7 +70,7 @@ export default function useRequest<Data = unknown, Error = unknown>(
   }
 
   return {
-    data: isFetching ? cachedData : response && response.data,
+    data: !isConnected ? cachedData : response && response.data,
     response,
     error,
     isValidating,

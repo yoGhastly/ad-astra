@@ -5,8 +5,8 @@ import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 function PlusIcon() {
   return (
     <Svg
-      width="28"
-      height="28"
+      width="32"
+      height="32"
       viewBox="0 0 24 24"
       fill="none"
       style={styles.container}

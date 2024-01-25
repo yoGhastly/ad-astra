@@ -6,6 +6,10 @@ import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
 const positions = [
   {
+    cx: "15.5",
+    cy: "59.5"
+  },
+  {
     cx: "29.5",
     cy: "89.5"
   },

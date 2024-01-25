@@ -1,3 +1,4 @@
+import React from "react";
 import { View, Text } from "..";
 import CircularGradient from "../../svg/CircularGradient";
 import { PlusIcon } from "../../svg/icons";

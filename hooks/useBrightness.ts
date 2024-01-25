@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 
+const DOMINANT_BACKGROUND_COLOR = 1;
+
 const useBrightness = (backgroundColors: string[]): string => {
   const [textColor, setTextColor] = useState<string>("black");
 
   useEffect(() => {
     const extractPrimaryColor = (colors: string[]): string | null => {
-      return colors.length > 0 ? colors[0] : null;
+      // HACK: Use second index in dominant colors for background
+      return colors.length > 0 ? colors[DOMINANT_BACKGROUND_COLOR] : null;
     };
 
     const calculateBrightness = (color: string): number => {

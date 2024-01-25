@@ -301,7 +301,7 @@ export const ModalContent: React.FC<ModalContentProps> = ({
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                gap: 30
+                gap: 15
               }}
             >
               <Text style={styles.modalText}>{body}</Text>
@@ -373,7 +373,7 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
         style={styles.overlay}
       >
         <View style={styles.blurredChipWrapper}>
-          <BlurView style={styles.blurredChip} intensity={20} tint="default">
+          <BlurView style={styles.blurredChip} intensity={20} tint={textColor === "white" ? "light" : "dark"}>
             <Text style={[styles.overlayText, { color: textColor }]}>Picture of The Day</Text>
           </BlurView>
         </View>
@@ -421,6 +421,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 30,
+    marginTop: 20,
     alignSelf: "flex-start",
     color: "white",
     padding: 20,
