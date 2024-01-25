@@ -28,14 +28,13 @@ import Animated, {
   withSpring,
   withTiming
 } from "react-native-reanimated";
-import { useIsConnected } from "react-native-offline";
+import { useHomeStore } from "../stores/homeStore";
+import { transparentList } from "../constants";
 
 SplashScreen.preventAutoHideAsync();
 
 const CheckInWithHaptic = withHapticFeedback(CheckInButton);
 const ShareIconWithHaptic = withHapticFeedback(ShareIcon);
-
-const transparentList = Array.from({ length: 2 }, () => "transparent");
 
 const requestConfig = {
   url: "https://ad-astra-api-production.up.railway.app",
@@ -47,8 +46,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     "Satoshi-Regular": require("../assets/fonts/Satoshi-Regular.otf"),
     "Zodiak-Bold": require("../assets/fonts/Zodiak-Bold.otf")
   });
-  const [isBottomNavigationVisible, setIsBottomNavigationVisible] =
-    useState(true);
+  const { isBottomNavigationVisible, setIsBottomNavigationVisible } =
+    useHomeStore();
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(1);
   let previousOffset = 0;
@@ -56,29 +55,40 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const { data: dominantColors, error } =
     useRequest<DominantColorsResponse>(requestConfig);
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentOffset = event.nativeEvent.contentOffset.y;
-    const direction =
-      currentOffset > 0 && currentOffset > previousOffset ? "down" : "up";
-    previousOffset = currentOffset;
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const currentOffset = event.nativeEvent.contentOffset.y;
+      const direction =
+        currentOffset > 0 && currentOffset > previousOffset ? "down" : "up";
+      previousOffset = currentOffset;
 
-    const threshold = 10;
+      const threshold = 10;
 
-    if (direction === "down" && isBottomNavigationVisible) {
-      setTimeout(() => {
-        setIsBottomNavigationVisible(false);
-        opacity.value = withSpring(0); // Fade out
-        translateY.value = withTiming(100);
-      }, 2300);
-    } else if (
-      direction === "up" &&
-      !isBottomNavigationVisible &&
-      currentOffset < threshold
-    ) {
-      setIsBottomNavigationVisible(true);
-      opacity.value = withSpring(1); // Fade in
-      translateY.value = withTiming(0);
-    }
+      if (direction === "down" && isBottomNavigationVisible) {
+        setTimeout(() => {
+          hideBottomNavigation();
+        }, 1500);
+      } else if (
+        direction === "up" &&
+        !isBottomNavigationVisible &&
+        currentOffset < threshold
+      ) {
+        showBottomNavigation();
+      }
+    },
+    [isBottomNavigationVisible]
+  );
+
+  const hideBottomNavigation = () => {
+    setIsBottomNavigationVisible(false);
+    opacity.value = withSpring(0); // Fade out
+    translateY.value = withTiming(100);
+  };
+
+  const showBottomNavigation = () => {
+    setIsBottomNavigationVisible(true);
+    opacity.value = withSpring(1); // Fade in
+    translateY.value = withTiming(0);
   };
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -175,7 +185,10 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           Each day a different image or photograph of our fascinating{" "}
           <Text
             style={{
-              color: `#${dominantColors ? dominantColors.colors[1] : "5B3BCC"}`
+              color: `#${dominantColors
+                  ? dominantColors.colors[dominantColors.colors.length - 1]
+                  : "5B3BCC"
+                }`
             }}
           >
             universe.

@@ -1,6 +1,7 @@
 import useSWR, { SWRConfiguration, SWRResponse } from "swr";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCachedData } from "../hooks/useCache";
 
 export type GetRequest = AxiosRequestConfig | null;
 
@@ -32,6 +33,8 @@ export default function useRequest<Data = unknown, Error = unknown>(
 ): Return<Data, Error> {
   const cacheKey = getCacheKey(request);
 
+  const [cachedData, isFetching] = useCachedData<Data>(request);
+
   const {
     data: response,
     error,
@@ -61,12 +64,12 @@ export default function useRequest<Data = unknown, Error = unknown>(
   );
 
   // Update AsyncStorage when the response is successful
-  if (response?.data) {
+  if (response?.data && !isFetching) {
     AsyncStorage.setItem(cacheKey, JSON.stringify(response.data));
   }
 
   return {
-    data: response && response.data,
+    data: isFetching ? cachedData : response && response.data,
     response,
     error,
     isValidating,

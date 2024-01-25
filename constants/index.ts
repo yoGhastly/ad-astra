@@ -45,3 +45,5 @@ export const emotions = [
   ...highEnergyUnpleasantEmotions,
   ...highEnergyPleasantEmotions
 ];
+
+export const transparentList = Array.from({ length: 2 }, () => "transparent");

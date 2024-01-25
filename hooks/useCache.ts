@@ -1,30 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useIsConnected } from "react-native-offline";
-import useRequest, { GetRequest, getCacheKey } from "../helpers/fetcher";
+import { GetRequest } from "../helpers/fetcher";
+import { useCachedDataStore } from "../stores/cachedDataStore";
 
 export function useCachedData<Data>(
   requestConfig: GetRequest
-): [Data | undefined] {
-  const [cachedData, setCachedData] = useState<Data | undefined>();
-  const cacheKey = getCacheKey(requestConfig);
+): [Data | undefined, boolean] {
+  const { cachedData, isFetching, setCachedData, setIsFetching } =
+    useCachedDataStore();
+  const cacheKey = JSON.stringify(requestConfig);
 
   useEffect(() => {
     const getCachedData = async () => {
       try {
         const value = await AsyncStorage.getItem(cacheKey);
         if (value) {
-          // If cached data exists, parse it and set it in the state
+          // If cached data exists, parse it and set it in the Zustand store
           const parsedData = JSON.parse(value) as Data;
-          setCachedData(parsedData);
+          setCachedData(cacheKey, parsedData);
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        setIsFetching(false);
       }
     };
 
     getCachedData();
-  }, [cacheKey]);
+  }, [cacheKey, setCachedData, setIsFetching]);
 
-  return [cachedData];
+  return [cachedData[cacheKey], isFetching];
 }

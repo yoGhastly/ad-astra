@@ -14,6 +14,10 @@ import {
   Text,
   View
 } from "react-native";
+import {
+  mix,
+  Group,
+} from '@shopify/react-native-skia';
 import * as SplashScreen from "expo-splash-screen";
 import * as Haptics from "expo-haptics";
 import { Gyroscope } from "expo-sensors";
@@ -29,7 +33,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Modal } from "./Modal";
 import { SafeAreaView } from "moti";
 import { BlurView } from "expo-blur";
-import { Easing } from "react-native-reanimated";
 import {
   DominantColorsResponse,
   PictureOfTheDayResponse
@@ -40,6 +43,7 @@ import {
   TouchableImagePoDProps
 } from "../../../types/pictureOfTheDay";
 import useRequest, { GetRequest } from "../../../helpers/fetcher";
+import useBrightness from "../../../hooks/useBrightness";
 
 function CallToActionButton() {
   return (
@@ -346,6 +350,12 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
   onErrorImage
 }) => {
   const linearGradientColors = gradientOverlayColors.map((c) => `#${c}`);
+  const colorsList = [
+    ...Array.from({ length: 1 }, () => "transparent"),
+    ...linearGradientColors.map((color) => color + "80")
+  ];
+
+  const textColor = useBrightness(gradientOverlayColors);
 
   return (
     <View>
@@ -359,12 +369,12 @@ const TouchableImagePoD: React.FC<TouchableImagePoDProps> = ({
       />
       {isLoading && <Text style={styles.loadingText}>Loading Image...</Text>}
       <LinearGradient
-        colors={linearGradientColors.map((color) => color + "30")} // '80' sets the alpha channel to 0.5 (adjust as needed)
+        colors={colorsList}
         style={styles.overlay}
       >
         <View style={styles.blurredChipWrapper}>
           <BlurView style={styles.blurredChip} intensity={20} tint="default">
-            <Text style={styles.overlayText}>Picture of The Day</Text>
+            <Text style={[styles.overlayText, { color: textColor }]}>Picture of The Day</Text>
           </BlurView>
         </View>
         <Text style={styles.overlayTitle}>{imageTitle}</Text>
@@ -477,7 +487,6 @@ const styles = StyleSheet.create({
   },
   overlayText: {
     fontFamily: "Satoshi-Regular",
-    color: "white",
     textTransform: "uppercase",
     fontSize: 13,
     fontWeight: "bold"
