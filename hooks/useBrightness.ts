@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const DOMINANT_BACKGROUND_COLOR = 1;
+const DOMINANT_BACKGROUND_COLOR = 0;
 
 const useBrightness = (backgroundColors: string[]): string => {
   const [textColor, setTextColor] = useState<string>("black");
@@ -24,6 +24,7 @@ const useBrightness = (backgroundColors: string[]): string => {
 
     if (primaryColor) {
       const isDarkBackground = calculateBrightness(primaryColor) < 128;
+      console.log({ isDarkBackground });
       const newTextColor = isDarkBackground ? "white" : "black";
       setTextColor(newTextColor);
     }

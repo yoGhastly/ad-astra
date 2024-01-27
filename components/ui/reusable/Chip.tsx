@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 import { Pressable, Text } from "..";
 
 interface Props {
-  color: "red" | "yellow" | "blue" | "green" | "default";
+  color: "red" | "yellow" | "blue" | "green" | "default" | string;
   label: string;
 }
 

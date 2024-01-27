@@ -49,8 +49,8 @@ export default function CheckIn({ navigation }: { navigation: any }) {
     "Satoshi-Bold": require("../assets/fonts/Satoshi-Bold.otf")
   });
 
-  const navigateToEmotionCircles = useCallback(() => {
-    navigation.navigate("SearchEmotions");
+  const navigateToEmotions = useCallback(() => {
+    navigation.navigate("Emotions");
   }, [navigation]);
 
   const onLayoutRootView = useCallback(async () => {
@@ -86,19 +86,19 @@ export default function CheckIn({ navigation }: { navigation: any }) {
         </Text>
         <CheckInButtonsContainer>
           <HighEnergyUnpleasantButton
-            onPress={navigateToEmotionCircles}
+            onPress={navigateToEmotions}
             style={styles.item}
           />
           <HighEnergyPleasantButton
-            onPress={navigateToEmotionCircles}
+            onPress={navigateToEmotions}
             style={styles.item}
           />
           <LowEnergyUnpleasantButton
-            onPress={navigateToEmotionCircles}
+            onPress={navigateToEmotions}
             style={styles.item}
           />
           <LowEnergyPleasantButton
-            onPress={navigateToEmotionCircles}
+            onPress={navigateToEmotions}
             style={styles.item}
           />
         </CheckInButtonsContainer>
