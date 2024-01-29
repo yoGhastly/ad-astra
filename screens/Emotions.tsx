@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect } from "react";
-import { StyleSheet, Animated, Easing, SafeAreaView } from "react-native";
+import React, { useCallback, useEffect, useRef } from "react";
+import { StyleSheet, SafeAreaView } from "react-native";
 import { useFonts } from "expo-font";
 import { ParamListBase } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -13,6 +13,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { SearchIcon, ArrowLeftIcon } from "../components/svg/icons";
+import LavaLampAnimation from "../components/ui/reusable/LavaLampAnimation";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,7 +46,8 @@ const Emotions = ({
       onLayoutRootView={onLayoutRootView}
       style={{ position: "relative" }}
     >
-      <BlurView intensity={5} tint="light" style={styles.container}>
+      <LavaLampAnimation bubbleColor="#A7B5FF" />
+      <BlurView intensity={100} tint="dark" style={styles.container}>
         <SafeAreaView
           style={{
             width: "100%",
@@ -56,7 +58,9 @@ const Emotions = ({
         >
           <Navbar
             startContent={
-              <HaptiCArrowLeft onPress={() => navigation.navigate("CheckIn")} />
+              <HaptiCArrowLeft
+                onPress={() => navigation.navigate("Animation")}
+              />
             }
             endContent={<SearchIcon />}
           />
@@ -170,6 +174,11 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 100,
     borderWidth: 0.5
+  },
+  lavaLamp: {
+    position: "absolute",
+    width: "100%",
+    height: "100%"
   }
 });
 
